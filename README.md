@@ -113,6 +113,11 @@ ruff check .
 pytest
 ```
 
+On Windows add the POSIX shims: `$env:PYTHONPATH = "tools\win_test_shims"` before `pytest`.
+
+Project docs: [`PLAN.md`](PLAN.md) (architecture + decisions), [`CHANGELOG.md`](CHANGELOG.md)
+(version history), [`AGENTS.md`](AGENTS.md) (development memory, commands, release process).
+
 ## Attribution
 
 Aircraft data from PiAware / tar1090. Route and aircraft type data from FlightAware AeroAPI and
