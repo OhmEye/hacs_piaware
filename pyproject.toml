@@ -3,7 +3,7 @@ name = "piaware-adsb"
 version = "0.3.1"
 description = "Home Assistant integration for PiAware / tar1090 ADS-B with an Assist voice intent."
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.14"
 license = { text = "MIT" }
 
 [project.optional-dependencies]

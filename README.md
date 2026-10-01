@@ -92,7 +92,7 @@ additional tool calling.
 
 ## Development
 
-Tests require **Python 3.13** (the pinned `pytest-homeassistant-custom-component` tracks a
+Tests require **Python 3.14** (the pinned `pytest-homeassistant-custom-component` tracks a
 current Home Assistant). The test harness is POSIX-only.
 
 ```bash
