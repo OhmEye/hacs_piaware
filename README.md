@@ -92,6 +92,9 @@ additional tool calling.
 
 ## Development
 
+Tests require **Python 3.13** (the pinned `pytest-homeassistant-custom-component` tracks a
+current Home Assistant). The test harness is POSIX-only.
+
 ```bash
 python -m pip install -e ".[test]"
 ruff check .

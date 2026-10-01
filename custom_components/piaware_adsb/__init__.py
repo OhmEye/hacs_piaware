@@ -49,6 +49,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = PiAwareCoordinator(
         hass,
+        config_entry=entry,
         host=config[CONF_HOST],
         port=config.get(CONF_PORT, DEFAULT_PORT),
         path=config.get(CONF_PATH, DEFAULT_PATH),

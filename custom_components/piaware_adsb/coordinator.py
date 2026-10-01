@@ -21,6 +21,8 @@ from .const import (
 )
 
 if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
+
     from .enrichment import EnrichmentClient
 
 _LOGGER = logging.getLogger(__name__)
@@ -64,14 +66,26 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
         enrich_notifications: bool = False,
         count_use_radius: bool = False,
         nearest_use_radius: bool = False,
+        config_entry: ConfigEntry | None = None,
         enrichment: EnrichmentClient | None = None,
     ) -> None:
-        super().__init__(
-            hass,
-            _LOGGER,
-            name=DOMAIN,
-            update_interval=timedelta(seconds=scan_interval),
-        )
+        interval = timedelta(seconds=scan_interval)
+        try:
+            # Home Assistant 2024.12+ accepts (and 2026+ requires) the config entry.
+            super().__init__(
+                hass,
+                _LOGGER,
+                name=DOMAIN,
+                config_entry=config_entry,
+                update_interval=interval,
+            )
+        except TypeError:  # pragma: no cover - older Home Assistant
+            super().__init__(
+                hass,
+                _LOGGER,
+                name=DOMAIN,
+                update_interval=interval,
+            )
         self._url = build_url(host, port, path)
         self.notifications_enabled = notifications_enabled
         self.notification_radius_miles = notification_radius_miles
