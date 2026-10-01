@@ -43,8 +43,20 @@ directory and restart.
 2. Set the host (default `piaware.lan`), port (`80`), and feed path
    (`/tar1090/data/aircraft.json`).
 3. Optionally add a FlightAware AeroAPI key to enable route lookups.
-4. Choose whether to install the Assist sentences, whether to enable overhead notifications, and
-   whether overhead notifications should use the FlightAware API (requires a key).
+4. Choose whether to install the Assist sentences, whether to enable overhead notifications,
+   whether overhead notifications should use the FlightAware API (requires a key), and whether the
+   notification radius should also constrain the aircraft count and the nearest aircraft.
+
+### Radius toggles
+
+The notification radius can be reused independently for two other entities:
+
+- **Only count aircraft within the notification radius** — the "Aircraft in range" sensor counts
+  only aircraft inside the radius. When off (default) it counts every aircraft with a decoded
+  position.
+- **Only report the nearest aircraft within the notification radius** — the nearest-aircraft sensor
+  and the "what plane is that" voice intent only consider aircraft inside the radius. When off
+  (default) the absolute nearest aircraft is used regardless of distance.
 
 ## Assist setup
 
@@ -75,7 +87,7 @@ additional tool calling.
 | `sensor.nearest_aircraft` | Callsign/ICAO of the nearest aircraft; full details as attributes |
 | `sensor.nearest_aircraft_distance` | Distance to the nearest aircraft (miles) |
 | `sensor.nearest_aircraft_altitude` | Nearest aircraft altitude (feet) |
-| `sensor.aircraft_in_range` | Number of positioned aircraft in range |
+| `sensor.aircraft_in_range` | Aircraft with a decoded position; limited to the radius when the count toggle is on |
 | `binary_sensor.aircraft_overhead` | On while an aircraft is within the overhead radius |
 
 ## Development

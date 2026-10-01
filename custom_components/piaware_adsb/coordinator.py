@@ -62,6 +62,8 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
         notifications_enabled: bool,
         notification_radius_miles: float,
         enrich_notifications: bool = False,
+        count_use_radius: bool = False,
+        nearest_use_radius: bool = False,
         enrichment: EnrichmentClient | None = None,
     ) -> None:
         super().__init__(
@@ -74,6 +76,8 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
         self.notifications_enabled = notifications_enabled
         self.notification_radius_miles = notification_radius_miles
         self.enrich_notifications = enrich_notifications
+        self.count_use_radius = count_use_radius
+        self.nearest_use_radius = nearest_use_radius
         self._enrichment = enrichment
         self._was_overhead = False
 
@@ -94,20 +98,26 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
         aircraft = parse_aircraft_payload(
             payload, self.hass.config.latitude, self.hass.config.longitude
         )
-        nearest = nearest_aircraft(aircraft)
         in_range = nearest_aircraft(aircraft, within_miles=self.notification_radius_miles)
+        positioned_count = sum(1 for a in aircraft if a.has_position)
+        in_range_count = sum(
+            1
+            for a in aircraft
+            if a.distance_miles is not None
+            and a.distance_miles <= self.notification_radius_miles
+        )
+
+        nearest = (
+            in_range if self.nearest_use_radius else nearest_aircraft(aircraft)
+        )
+        count = in_range_count if self.count_use_radius else positioned_count
 
         data = PiAwareData(
             aircraft=aircraft,
             nearest=nearest,
             in_range=in_range,
-            count=sum(1 for a in aircraft if a.has_position),
-            in_range_count=sum(
-                1
-                for a in aircraft
-                if a.distance_miles is not None
-                and a.distance_miles <= self.notification_radius_miles
-            ),
+            count=count,
+            in_range_count=in_range_count,
         )
 
         await self._handle_overhead(data)

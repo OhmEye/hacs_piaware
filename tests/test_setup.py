@@ -8,9 +8,11 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.piaware_adsb.const import (
     CONF_API_KEY,
+    CONF_COUNT_USE_RADIUS,
     CONF_ENRICH_NOTIFICATIONS,
     CONF_HOST,
     CONF_INSTALL_SENTENCES,
+    CONF_NEAREST_USE_RADIUS,
     CONF_NOTIFICATION_RADIUS_MILES,
     CONF_NOTIFICATIONS_ENABLED,
     CONF_PATH,
@@ -31,6 +33,8 @@ ENTRY_DATA = {
     CONF_NOTIFICATIONS_ENABLED: True,
     CONF_NOTIFICATION_RADIUS_MILES: 5.0,
     CONF_ENRICH_NOTIFICATIONS: False,
+    CONF_COUNT_USE_RADIUS: False,
+    CONF_NEAREST_USE_RADIUS: False,
     CONF_INSTALL_SENTENCES: False,
 }
 
@@ -70,8 +74,35 @@ async def test_setup_creates_entities(
     nearest = hass.states.get("sensor.piaware_ads_b_nearest_aircraft")
     assert nearest.state == "GRND1"
 
+    # Default: the count sensor reports all positioned aircraft (4 with a position).
+    in_range = hass.states.get("sensor.piaware_ads_b_aircraft_in_range")
+    assert in_range.state == "4"
+
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_radius_toggles_restrict_count_and_nearest(
+    hass: HomeAssistant, aioclient_mock, aircraft_payload: dict
+) -> None:
+    aioclient_mock.get(FEED_URL, json=aircraft_payload)
+    hass.config.latitude = 43.0
+    hass.config.longitude = -76.0
+
+    data = {
+        **ENTRY_DATA,
+        CONF_NOTIFICATION_RADIUS_MILES: 0.5,
+        CONF_COUNT_USE_RADIUS: True,
+        CONF_NEAREST_USE_RADIUS: True,
+    }
+    entry = MockConfigEntry(domain=DOMAIN, data=data)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Nothing is within 0.5 mi, so the count is 0 and there is no nearest aircraft.
+    assert hass.states.get("sensor.piaware_ads_b_aircraft_in_range").state == "0"
+    assert hass.states.get("sensor.piaware_ads_b_nearest_aircraft").state == "unknown"
 
 
 async def test_options_flow_updates_radius(

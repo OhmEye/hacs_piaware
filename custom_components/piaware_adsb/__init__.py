@@ -10,17 +10,21 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     CONF_API_KEY,
+    CONF_COUNT_USE_RADIUS,
     CONF_ENRICH_NOTIFICATIONS,
     CONF_HOST,
     CONF_INSTALL_SENTENCES,
+    CONF_NEAREST_USE_RADIUS,
     CONF_NOTIFICATION_RADIUS_MILES,
     CONF_NOTIFICATIONS_ENABLED,
     CONF_PATH,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CUSTOM_SENTENCE_FILE,
+    DEFAULT_COUNT_USE_RADIUS,
     DEFAULT_ENRICH_NOTIFICATIONS,
     DEFAULT_INSTALL_SENTENCES,
+    DEFAULT_NEAREST_USE_RADIUS,
     DEFAULT_NOTIFICATION_RADIUS_MILES,
     DEFAULT_NOTIFICATIONS_ENABLED,
     DEFAULT_PATH,
@@ -57,6 +61,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
         enrich_notifications=config.get(
             CONF_ENRICH_NOTIFICATIONS, DEFAULT_ENRICH_NOTIFICATIONS
+        ),
+        count_use_radius=config.get(CONF_COUNT_USE_RADIUS, DEFAULT_COUNT_USE_RADIUS),
+        nearest_use_radius=config.get(
+            CONF_NEAREST_USE_RADIUS, DEFAULT_NEAREST_USE_RADIUS
         ),
         enrichment=enrichment,
     )

@@ -19,6 +19,8 @@ USER_INPUT = {
     "notifications_enabled": False,
     "notification_radius_miles": 5.0,
     "enrich_notifications": False,
+    "count_use_radius": False,
+    "nearest_use_radius": False,
     "install_sentences": False,
 }
 

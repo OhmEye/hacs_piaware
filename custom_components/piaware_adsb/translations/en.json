@@ -13,6 +13,8 @@
           "notifications_enabled": "Enable overhead notifications",
           "notification_radius_miles": "Overhead notification radius (miles)",
           "enrich_notifications": "Use the FlightAware API for overhead notifications",
+          "count_use_radius": "Only count aircraft within the notification radius",
+          "nearest_use_radius": "Only report the nearest aircraft within the notification radius",
           "install_sentences": "Install Assist sentences for \"what plane is that\""
         }
       }
@@ -38,6 +40,8 @@
           "notifications_enabled": "Enable overhead notifications",
           "notification_radius_miles": "Overhead notification radius (miles)",
           "enrich_notifications": "Use the FlightAware API for overhead notifications",
+          "count_use_radius": "Only count aircraft within the notification radius",
+          "nearest_use_radius": "Only report the nearest aircraft within the notification radius",
           "install_sentences": "Install Assist sentences for \"what plane is that\""
         }
       }
