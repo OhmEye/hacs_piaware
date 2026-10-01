@@ -1,0 +1,49 @@
+blueprint:
+  name: PiAware ADS-B - aircraft overhead notification
+  description: >
+    Send a notification when an aircraft enters the configured overhead radius.
+    The integration must have "Enable overhead notifications" turned on. The
+    message includes the callsign, type, distance, direction and altitude.
+  domain: automation
+  source_url: https://github.com/OhmEye/hacs_piaware/blob/main/blueprints/automation/piaware_adsb/overhead_notify.yaml
+  input:
+    notify_action:
+      name: Notification action
+      description: The action to run when an aircraft is overhead.
+      selector:
+        action: {}
+    altitude_filter:
+      name: Minimum altitude (feet)
+      description: Only notify for aircraft at or above this altitude.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 50000
+          step: 100
+          unit_of_measurement: ft
+
+mode: single
+max_exceeded: silent
+
+trigger:
+  - platform: event
+    event_type: piaware_adsb_aircraft_overhead
+
+variables:
+  callsign: "{{ trigger.event.data.callsign or trigger.event.data.hex | upper }}"
+  type_code: "{{ trigger.event.data.type_code or 'unknown type' }}"
+  distance: "{{ trigger.event.data.distance_miles | round(1) }}"
+  compass: "{{ trigger.event.data.compass or 'nearby' }}"
+  altitude: "{{ trigger.event.data.altitude_ft }}"
+  min_altitude: !input altitude_filter
+
+action:
+  - condition: template
+    value_template: "{{ altitude is none or altitude >= min_altitude }}"
+  - action: !input notify_action
+    data:
+      title: Aircraft overhead
+      message: >-
+        {{ callsign }} ({{ type_code }}) is {{ distance }} miles {{ compass }}
+        {%- if altitude %} at {{ altitude }} feet{% endif %}.

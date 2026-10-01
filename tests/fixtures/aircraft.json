@@ -1,0 +1,54 @@
+{
+  "now": 1790852914.8,
+  "messages": 355430487,
+  "aircraft": [
+    {
+      "hex": "abc123",
+      "flight": "DAL100 ",
+      "alt_baro": 32000,
+      "alt_geom": 33600,
+      "gs": 450.0,
+      "track": 90.0,
+      "squawk": "1200",
+      "category": "A3",
+      "lat": 43.05,
+      "lon": -76.05,
+      "seen": 0.5
+    },
+    {
+      "hex": "a53436",
+      "alt_baro": 13425,
+      "gs": 367.6,
+      "track": 115.8,
+      "squawk": "4125",
+      "seen": 0.2
+    },
+    {
+      "hex": "c06363",
+      "alt_baro": 24000,
+      "lat": 43.5,
+      "lon": -76.5,
+      "seen": 5.0
+    },
+    {
+      "hex": "a32095",
+      "flight": "AAL2453",
+      "alt_baro": 33000,
+      "gs": 494.3,
+      "track": 75.7,
+      "category": "A3",
+      "lat": 41.937195,
+      "lon": -78.692322,
+      "seen": 1.0
+    },
+    {
+      "hex": "dead01",
+      "flight": "GRND1",
+      "alt_baro": "ground",
+      "gs": 12.0,
+      "lat": 43.01,
+      "lon": -76.01,
+      "seen": 0.1
+    }
+  ]
+}

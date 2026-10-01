@@ -1,0 +1,65 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "PiAware ADS-B",
+        "description": "Connect to a tar1090 / dump1090 aircraft feed served by PiAware.",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "path": "Feed path",
+          "scan_interval": "Update interval (seconds)",
+          "api_key": "FlightAware AeroAPI key (optional)",
+          "notifications_enabled": "Enable overhead notifications",
+          "notification_radius_miles": "Overhead notification radius (miles)",
+          "install_sentences": "Install Assist sentences for \"what plane is that\""
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to the aircraft feed.",
+      "invalid_feed": "The endpoint did not return a tar1090/dump1090 aircraft feed."
+    },
+    "abort": {
+      "already_configured": "This PiAware feed is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "PiAware ADS-B options",
+        "data": {
+          "host": "Host",
+          "port": "Port",
+          "path": "Feed path",
+          "scan_interval": "Update interval (seconds)",
+          "api_key": "FlightAware AeroAPI key (optional)",
+          "notifications_enabled": "Enable overhead notifications",
+          "notification_radius_miles": "Overhead notification radius (miles)",
+          "install_sentences": "Install Assist sentences for \"what plane is that\""
+        }
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "nearest_aircraft": {
+        "name": "Nearest aircraft"
+      },
+      "nearest_distance": {
+        "name": "Nearest aircraft distance"
+      },
+      "nearest_altitude": {
+        "name": "Nearest aircraft altitude"
+      },
+      "aircraft_count": {
+        "name": "Aircraft in range"
+      }
+    },
+    "binary_sensor": {
+      "aircraft_overhead": {
+        "name": "Aircraft overhead"
+      }
+    }
+  }
+}

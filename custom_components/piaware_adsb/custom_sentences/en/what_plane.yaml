@@ -1,0 +1,21 @@
+language: "en"
+intents:
+  PiawareWhatPlane:
+    data:
+      - sentences:
+          - "what plane is that"
+          - "what plane is that overhead"
+          - "what's that plane"
+          - "what is that plane"
+          - "what's that plane overhead"
+          - "what is that plane overhead"
+          - "what plane is above me"
+          - "what plane is over head"
+          - "what's flying overhead"
+          - "what is flying overhead"
+          - "what's flying over me"
+          - "what aircraft is that"
+          - "what aircraft is that overhead"
+          - "what's that aircraft"
+          - "which plane is overhead"
+          - "which aircraft is overhead"
