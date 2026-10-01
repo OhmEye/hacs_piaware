@@ -37,8 +37,8 @@ variables:
   distance: "{{ trigger.event.data.distance_miles | round(1) }}"
   compass: "{{ trigger.event.data.compass or 'nearby' }}"
   altitude: "{{ trigger.event.data.altitude_ft }}"
-  origin: "{{ trigger.event.data.origin }}"
-  destination: "{{ trigger.event.data.destination }}"
+  origin: "{{ trigger.event.data.origin_name or trigger.event.data.origin }}"
+  destination: "{{ trigger.event.data.destination_name or trigger.event.data.destination }}"
   airline: "{{ trigger.event.data.airline }}"
   min_altitude: !input altitude_filter
 

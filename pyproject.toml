@@ -1,6 +1,6 @@
 [project]
 name = "piaware-adsb"
-version = "0.5.0"
+version = "0.6.0"
 description = "Home Assistant integration for PiAware / tar1090 ADS-B with an Assist voice intent."
 readme = "README.md"
 requires-python = ">=3.14"

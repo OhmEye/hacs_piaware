@@ -97,7 +97,9 @@ def _describe(
 
     if route and route.has_route:
         airline = f" ({route.airline})" if route.airline else ""
-        parts.append(f"from {route.origin} to {route.destination}{airline}")
+        parts.append(
+            f"from {route.origin_label} to {route.destination_label}{airline}"
+        )
     elif aircraft.altitude_ft is not None:
         parts.append(f"at {aircraft.altitude_ft:,} feet")
 

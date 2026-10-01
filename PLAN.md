@@ -17,7 +17,7 @@ HACS-installable custom integration with tests.
 | Voice front-end | HA Assist, default conversation agent |
 | Selection | Nearest aircraft by great-circle distance from HA home coordinates |
 | Data source | `http://piaware.lan/tar1090/data/aircraft.json` (receiver at 42.07002, -77.05097) |
-| Spoken detail | flight no./callsign, type, distance, origin, destination |
+| Spoken detail | flight no./callsign, registration, type, distance, origin/destination city names (AeroAPI, code fallback) |
 | Units | Miles, altitude in feet, bearing as compass direction |
 | Enrichment | FlightAware AeroAPI `/flights/{ident}` with `x-apikey`; hexdb.io fallback for type; 6 h TTL cache; invoked on voice query (and optionally for overhead events) |
 | Reference location | HA `hass.config.latitude/longitude` (Settings → Home Information) |

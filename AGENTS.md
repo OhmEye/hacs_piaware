@@ -64,6 +64,9 @@ $env:PYTHONPATH = "tools\win_test_shims"   # fcntl/resource shims
   voice phrase is `registration number <reg>` (skipped when it equals the callsign/hex) and the
   type is spoken as `a/an <long_name>` when available, falling back to the ICAO type code.
   Note: `code`/`name` are absent (or `00`) for some aircraft — always handle empty metadata.
+- **Route labels**: `RouteInfo.origin_label`/`destination_label` prefer AeroAPI `city` →
+  `airport_name` → code; the intent speaks these (e.g. "from Atlanta to Tokyo Haneda"). The
+  overhead event exposes both codes and `origin_name`/`destination_name`.
 - Reference coordinates come from `hass.config.latitude/longitude`.
 - Custom Assist sentences are copied to `config/custom_sentences/en/` at setup; a HA **restart** is
   required for them (and for any custom-integration code update) to take effect.

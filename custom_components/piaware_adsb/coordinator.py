@@ -161,6 +161,8 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
                 "squawk": target.squawk,
                 "origin": None,
                 "destination": None,
+                "origin_name": None,
+                "destination_name": None,
                 "airline": None,
                 "enriched": False,
             }
@@ -175,6 +177,8 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
                 )
                 event_data["origin"] = route.origin
                 event_data["destination"] = route.destination
+                event_data["origin_name"] = route.origin_name
+                event_data["destination_name"] = route.destination_name
                 event_data["airline"] = route.airline
                 if route.aircraft_type:
                     event_data["type_code"] = route.aircraft_type

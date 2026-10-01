@@ -47,6 +47,21 @@ def test_build_speech_with_route() -> None:
     assert "Delta Air Lines" in speech
 
 
+def test_build_speech_uses_city_names_when_available() -> None:
+    route = RouteInfo(
+        ident="DAL100",
+        origin="ATL",
+        destination="HND",
+        origin_name="Atlanta",
+        destination_name="Tokyo",
+    )
+    speech = build_speech(_aircraft(), route)
+
+    assert "from Atlanta to Tokyo" in speech
+    assert "ATL" not in speech
+    assert "HND" not in speech
+
+
 def test_build_speech_without_route_uses_altitude() -> None:
     speech = build_speech(_aircraft(), None)
 

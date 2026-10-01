@@ -3,6 +3,13 @@
 All notable changes to this project are documented here. Versions match
 `custom_components/piaware_adsb/manifest.json` and the GitHub release tags.
 
+## [0.6.0] - 2026-10-01
+
+### Added
+- The spoken route now uses the AeroAPI airport `city` (falling back to `airport_name`, then the
+  IATA/ICAO code), e.g. *"from Atlanta to Tokyo Haneda"*. The overhead event also carries
+  `origin_name`/`destination_name`, and the blueprint prefers them.
+
 ## [0.5.0] - 2026-10-01
 
 ### Added

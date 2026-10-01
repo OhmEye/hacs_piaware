@@ -32,10 +32,22 @@ class RouteInfo:
     destination: str | None = None
     airline: str | None = None
     aircraft_type: str | None = None
+    origin_name: str | None = None
+    destination_name: str | None = None
 
     @property
     def has_route(self) -> bool:
         return bool(self.origin and self.destination)
+
+    @property
+    def origin_label(self) -> str | None:
+        """Friendly origin (city/airport name) falling back to the code."""
+        return self.origin_name or self.origin
+
+    @property
+    def destination_label(self) -> str | None:
+        """Friendly destination (city/airport name) falling back to the code."""
+        return self.destination_name or self.destination
 
 
 class EnrichmentClient:
@@ -91,6 +103,8 @@ class EnrichmentClient:
                         destination=info.destination,
                         airline=info.airline,
                         aircraft_type=type_name,
+                        origin_name=info.origin_name,
+                        destination_name=info.destination_name,
                     )
 
             self._cache_set(cache_key, info)
@@ -128,6 +142,8 @@ class EnrichmentClient:
             destination=destination,
             airline=_airline_name(flight),
             aircraft_type=flight.get("aircraft_type"),
+            origin_name=_airport_name(flight.get("origin")),
+            destination_name=_airport_name(flight.get("destination")),
         )
 
     async def _lookup_hexdb_type(self, icao24: str) -> str | None:
@@ -165,6 +181,19 @@ def _airport_code(airport: Any) -> str | None:
     if not isinstance(airport, dict):
         return None
     return airport.get("code_iata") or airport.get("code") or airport.get("code_icao")
+
+
+def _airport_name(airport: Any) -> str | None:
+    """Return a friendly city/airport label from an AeroAPI airport object."""
+    if not isinstance(airport, dict):
+        return None
+    city = airport.get("city")
+    if isinstance(city, str) and city.strip():
+        return city.strip()
+    name = airport.get("airport_name")
+    if isinstance(name, str) and name.strip():
+        return name.strip()
+    return None
 
 
 def _airline_name(flight: dict[str, Any]) -> str | None:

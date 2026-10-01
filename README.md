@@ -13,7 +13,9 @@ aircraft type, distance, origin and destination.
 - **Overhead binary sensor** — on while an aircraft is inside the configured radius.
 - **Overhead notifications** — optional event + automation blueprint, disabled by default.
   Enriching notifications with route data via the API is a separate, disabled-by-default toggle.
-- **Route/type enrichment** — optional FlightAware AeroAPI key, cached to control cost.
+- **Route/type enrichment** — optional FlightAware AeroAPI key, cached to control cost. Routes are
+  spoken with the airport city/name when available (e.g. *"from Atlanta to Tokyo Haneda"*),
+  falling back to the IATA/ICAO code.
 - **Callsign retention** — the last callsign seen for each ICAO address is remembered, so brief
   gaps in the feed's `flight` field don't fall back to the raw hex.
 - **Registration & type** — looked up from the receiver's own tar1090 database (no external API):

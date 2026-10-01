@@ -15,8 +15,17 @@ AEROAPI_PAYLOAD = {
             "status": "En Route",
             "operator": "Delta Air Lines",
             "aircraft_type": "B738",
-            "origin": {"code_iata": "ATL", "code": "KATL"},
-            "destination": {"code_iata": "JFK", "code": "KJFK"},
+            "origin": {
+                "code_iata": "ATL",
+                "code": "KATL",
+                "city": "Atlanta",
+                "airport_name": "Hartsfield-Jackson Atlanta Intl",
+            },
+            "destination": {
+                "code_iata": "HND",
+                "code": "RJTT",
+                "airport_name": "Tokyo Haneda",
+            },
         }
     ]
 }
@@ -29,7 +38,11 @@ async def test_enrich_returns_route(hass: HomeAssistant, aioclient_mock) -> None
     info = await client.async_enrich("DAL100", "abc123")
 
     assert info.origin == "ATL"
-    assert info.destination == "JFK"
+    assert info.destination == "HND"
+    assert info.origin_name == "Atlanta"
+    assert info.destination_name == "Tokyo Haneda"
+    assert info.origin_label == "Atlanta"
+    assert info.destination_label == "Tokyo Haneda"
     assert info.airline == "Delta Air Lines"
     assert info.aircraft_type == "B738"
     assert info.has_route is True
