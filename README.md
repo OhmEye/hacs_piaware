@@ -6,11 +6,13 @@ aircraft type, distance, origin and destination.
 
 ## Features
 
-- **Assist voice intent** — *"what plane is that"* / *"what's flying overhead"*.
+- **Assist voice intent** — *"what plane is that"*, *"what's flying overhead"*,
+  *"what's the nearest plane"*.
 - **Sensors** — nearest aircraft (callsign, type, altitude, distance, bearing, compass), nearest
   distance, nearest altitude, and aircraft-in-range count.
 - **Overhead binary sensor** — on while an aircraft is inside the configured radius.
 - **Overhead notifications** — optional event + automation blueprint, disabled by default.
+  Enriching notifications with route data via the API is a separate, disabled-by-default toggle.
 - **Route/type enrichment** — optional FlightAware AeroAPI key, cached to control cost.
 
 ## Requirements
@@ -41,7 +43,8 @@ directory and restart.
 2. Set the host (default `piaware.lan`), port (`80`), and feed path
    (`/tar1090/data/aircraft.json`).
 3. Optionally add a FlightAware AeroAPI key to enable route lookups.
-4. Choose whether to install the Assist sentences and whether to enable overhead notifications.
+4. Choose whether to install the Assist sentences, whether to enable overhead notifications, and
+   whether overhead notifications should use the FlightAware API (requires a key).
 
 ## Assist setup
 
@@ -50,6 +53,7 @@ At setup the integration copies `custom_sentences/en/what_plane.yaml` into
 once** after the first install. Then expose an Assist satellite or use the Assist dialog and say:
 
 > "what plane is that"
+> "what's the nearest plane"
 
 The default Home Assistant conversation agent handles the intent; LLM-based agents would need
 additional tool calling.
@@ -57,9 +61,12 @@ additional tool calling.
 ## Overhead notifications
 
 1. Enable **Enable overhead notifications** in the integration options and set the radius.
-2. Create an automation from the blueprint **PiAware ADS-B - aircraft overhead notification**.
-3. The event `piaware_adsb_aircraft_overhead` carries `hex`, `callsign`, `type_code`,
-   `altitude_ft`, `distance_miles`, `compass` and `squawk`.
+2. Optionally enable **Use the FlightAware API for overhead notifications** to include the route
+   (requires an AeroAPI key; lookups are cached and happen once per overhead aircraft).
+3. Create an automation from the blueprint **PiAware ADS-B - aircraft overhead notification**.
+4. The event `piaware_adsb_aircraft_overhead` carries `hex`, `callsign`, `type_code`,
+   `altitude_ft`, `distance_miles`, `compass`, `squawk`, and — when API enrichment is on —
+   `origin`, `destination`, `airline` and `enriched`.
 
 ## Entities
 

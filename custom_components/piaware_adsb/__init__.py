@@ -10,6 +10,7 @@ from homeassistant.core import HomeAssistant
 
 from .const import (
     CONF_API_KEY,
+    CONF_ENRICH_NOTIFICATIONS,
     CONF_HOST,
     CONF_INSTALL_SENTENCES,
     CONF_NOTIFICATION_RADIUS_MILES,
@@ -18,6 +19,7 @@ from .const import (
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CUSTOM_SENTENCE_FILE,
+    DEFAULT_ENRICH_NOTIFICATIONS,
     DEFAULT_INSTALL_SENTENCES,
     DEFAULT_NOTIFICATION_RADIUS_MILES,
     DEFAULT_NOTIFICATIONS_ENABLED,
@@ -39,6 +41,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up PiAware ADS-B from a config entry."""
     config = {**entry.data, **entry.options}
 
+    enrichment = EnrichmentClient(hass, config.get(CONF_API_KEY))
+
     coordinator = PiAwareCoordinator(
         hass,
         host=config[CONF_HOST],
@@ -51,10 +55,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         notification_radius_miles=config.get(
             CONF_NOTIFICATION_RADIUS_MILES, DEFAULT_NOTIFICATION_RADIUS_MILES
         ),
+        enrich_notifications=config.get(
+            CONF_ENRICH_NOTIFICATIONS, DEFAULT_ENRICH_NOTIFICATIONS
+        ),
+        enrichment=enrichment,
     )
     await coordinator.async_config_entry_first_refresh()
-
-    enrichment = EnrichmentClient(hass, config.get(CONF_API_KEY))
 
     store = hass.data.setdefault(DOMAIN, {})
     store["coordinator"] = coordinator

@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 from aiohttp import ClientError
 from homeassistant.core import HomeAssistant
@@ -18,6 +19,9 @@ from .const import (
     EVENT_AIRCRAFT_OVERHEAD,
     SIGNAL_AIRCRAFT_OVERHEAD,
 )
+
+if TYPE_CHECKING:
+    from .enrichment import EnrichmentClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,6 +61,8 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
         scan_interval: int,
         notifications_enabled: bool,
         notification_radius_miles: float,
+        enrich_notifications: bool = False,
+        enrichment: EnrichmentClient | None = None,
     ) -> None:
         super().__init__(
             hass,
@@ -67,6 +73,8 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
         self._url = build_url(host, port, path)
         self.notifications_enabled = notifications_enabled
         self.notification_radius_miles = notification_radius_miles
+        self.enrich_notifications = enrich_notifications
+        self._enrichment = enrichment
         self._was_overhead = False
 
     @property
@@ -102,10 +110,10 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
             ),
         )
 
-        self._handle_overhead(data)
+        await self._handle_overhead(data)
         return data
 
-    def _handle_overhead(self, data: PiAwareData) -> None:
+    async def _handle_overhead(self, data: PiAwareData) -> None:
         """Fire the overhead event/signal on a rising edge when enabled."""
         if self.notifications_enabled and data.overhead and not self._was_overhead:
             target = data.in_range
@@ -118,7 +126,27 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
                 "distance_miles": target.distance_miles,
                 "compass": target.compass,
                 "squawk": target.squawk,
+                "origin": None,
+                "destination": None,
+                "airline": None,
+                "enriched": False,
             }
+
+            if (
+                self.enrich_notifications
+                and self._enrichment is not None
+                and self._enrichment.has_api_key
+            ):
+                route = await self._enrichment.async_enrich(
+                    target.callsign, target.hex
+                )
+                event_data["origin"] = route.origin
+                event_data["destination"] = route.destination
+                event_data["airline"] = route.airline
+                if route.aircraft_type:
+                    event_data["type_code"] = route.aircraft_type
+                event_data["enriched"] = route.has_route
+
             self.hass.bus.async_fire(EVENT_AIRCRAFT_OVERHEAD, event_data)
             async_dispatcher_send(self.hass, SIGNAL_AIRCRAFT_OVERHEAD, target)
         self._was_overhead = data.overhead

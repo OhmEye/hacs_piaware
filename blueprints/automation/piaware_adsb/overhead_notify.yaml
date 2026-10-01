@@ -3,7 +3,8 @@ blueprint:
   description: >
     Send a notification when an aircraft enters the configured overhead radius.
     The integration must have "Enable overhead notifications" turned on. The
-    message includes the callsign, type, distance, direction and altitude.
+    message includes the callsign, type, distance, direction and altitude, plus
+    the route when "Use the FlightAware API for overhead notifications" is on.
   domain: automation
   source_url: https://github.com/OhmEye/hacs_piaware/blob/main/blueprints/automation/piaware_adsb/overhead_notify.yaml
   input:
@@ -36,6 +37,9 @@ variables:
   distance: "{{ trigger.event.data.distance_miles | round(1) }}"
   compass: "{{ trigger.event.data.compass or 'nearby' }}"
   altitude: "{{ trigger.event.data.altitude_ft }}"
+  origin: "{{ trigger.event.data.origin }}"
+  destination: "{{ trigger.event.data.destination }}"
+  airline: "{{ trigger.event.data.airline }}"
   min_altitude: !input altitude_filter
 
 action:
@@ -46,4 +50,6 @@ action:
       title: Aircraft overhead
       message: >-
         {{ callsign }} ({{ type_code }}) is {{ distance }} miles {{ compass }}
-        {%- if altitude %} at {{ altitude }} feet{% endif %}.
+        {%- if altitude %} at {{ altitude }} feet{% endif %}
+        {%- if origin and destination %}, flying {{ origin }} to {{ destination }}
+        {%- if airline %} on {{ airline }}{% endif %}{% endif %}.

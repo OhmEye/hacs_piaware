@@ -18,6 +18,7 @@ USER_INPUT = {
     "api_key": "",
     "notifications_enabled": False,
     "notification_radius_miles": 5.0,
+    "enrich_notifications": False,
     "install_sentences": False,
 }
 

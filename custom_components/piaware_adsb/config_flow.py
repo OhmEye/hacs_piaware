@@ -20,6 +20,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CONF_API_KEY,
+    CONF_ENRICH_NOTIFICATIONS,
     CONF_HOST,
     CONF_INSTALL_SENTENCES,
     CONF_NOTIFICATION_RADIUS_MILES,
@@ -27,6 +28,7 @@ from .const import (
     CONF_PATH,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
+    DEFAULT_ENRICH_NOTIFICATIONS,
     DEFAULT_HOST,
     DEFAULT_INSTALL_SENTENCES,
     DEFAULT_NOTIFICATION_RADIUS_MILES,
@@ -81,6 +83,12 @@ def _schema(defaults: dict[str, Any]) -> vol.Schema:
                     mode=selector.NumberSelectorMode.BOX,
                 )
             ),
+            vol.Required(
+                CONF_ENRICH_NOTIFICATIONS,
+                default=defaults.get(
+                    CONF_ENRICH_NOTIFICATIONS, DEFAULT_ENRICH_NOTIFICATIONS
+                ),
+            ): selector.BooleanSelector(),
             vol.Required(
                 CONF_INSTALL_SENTENCES,
                 default=defaults.get(CONF_INSTALL_SENTENCES, DEFAULT_INSTALL_SENTENCES),

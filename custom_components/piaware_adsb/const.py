@@ -14,6 +14,7 @@ CONF_SCAN_INTERVAL: Final = "scan_interval"
 CONF_API_KEY: Final = "api_key"
 CONF_NOTIFICATIONS_ENABLED: Final = "notifications_enabled"
 CONF_NOTIFICATION_RADIUS_MILES: Final = "notification_radius_miles"
+CONF_ENRICH_NOTIFICATIONS: Final = "enrich_notifications"
 CONF_INSTALL_SENTENCES: Final = "install_sentences"
 
 DEFAULT_HOST: Final = "piaware.lan"
@@ -22,6 +23,7 @@ DEFAULT_PATH: Final = "/tar1090/data/aircraft.json"
 DEFAULT_SCAN_INTERVAL: Final = 10
 DEFAULT_NOTIFICATIONS_ENABLED: Final = False
 DEFAULT_NOTIFICATION_RADIUS_MILES: Final = 5.0
+DEFAULT_ENRICH_NOTIFICATIONS: Final = False
 DEFAULT_INSTALL_SENTENCES: Final = True
 
 MIN_SCAN_INTERVAL: Final = 2

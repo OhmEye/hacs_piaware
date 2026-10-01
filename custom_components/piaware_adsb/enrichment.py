@@ -47,6 +47,11 @@ class EnrichmentClient:
         self._cache: dict[str, tuple[datetime, RouteInfo]] = {}
         self._locks: dict[str, asyncio.Lock] = {}
 
+    @property
+    def has_api_key(self) -> bool:
+        """Whether a FlightAware AeroAPI key is configured."""
+        return self._api_key is not None
+
     def _cache_get(self, key: str) -> RouteInfo | None:
         entry = self._cache.get(key)
         if entry is None:
