@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from copy import deepcopy
+
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from pytest_homeassistant_custom_component.common import MockConfigEntry
@@ -105,6 +107,36 @@ async def test_radius_toggles_restrict_count_and_nearest(
     assert hass.states.get("sensor.piaware_ads_b_aircraft_in_range").state == "unavailable"
     assert hass.states.get("sensor.piaware_ads_b_nearest_aircraft").state == "unavailable"
     assert hass.states.get("sensor.piaware_ads_b_nearest_aircraft_distance").state == "unavailable"
+
+
+async def test_callsign_retained_when_feed_omits_it(
+    hass: HomeAssistant, aioclient_mock, aircraft_payload: dict
+) -> None:
+    aioclient_mock.get(FEED_URL, json=aircraft_payload)
+    hass.config.latitude = 43.0
+    hass.config.longitude = -76.0
+
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.piaware_ads_b_nearest_aircraft").state == "GRND1"
+
+    # Next poll: the nearest aircraft's callsign is missing from the feed.
+    stripped = deepcopy(aircraft_payload)
+    for raw in stripped["aircraft"]:
+        if raw["hex"] == "dead01":
+            raw.pop("flight", None)
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(FEED_URL, json=stripped)
+
+    coordinator = hass.data[DOMAIN]["coordinator"]
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    # The remembered callsign is still used instead of falling back to the hex.
+    assert hass.states.get("sensor.piaware_ads_b_nearest_aircraft").state == "GRND1"
 
 
 async def test_radius_toggles_off_ignore_radius(

@@ -12,9 +12,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .aircraft import Aircraft, nearest_aircraft, parse_aircraft_payload
+from .callsign import CallsignCache
 from .const import (
+    CALLSIGN_CACHE_TTL,
     DOMAIN,
     EVENT_AIRCRAFT_OVERHEAD,
     SIGNAL_AIRCRAFT_OVERHEAD,
@@ -94,6 +97,7 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
         self.nearest_use_radius = nearest_use_radius
         self._enrichment = enrichment
         self._was_overhead = False
+        self._callsign_cache = CallsignCache(CALLSIGN_CACHE_TTL)
 
     @property
     def url(self) -> str:
@@ -112,6 +116,7 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
         aircraft = parse_aircraft_payload(
             payload, self.hass.config.latitude, self.hass.config.longitude
         )
+        self._callsign_cache.apply(aircraft, dt_util.utcnow())
         in_range = nearest_aircraft(aircraft, within_miles=self.notification_radius_miles)
         positioned_count = sum(1 for a in aircraft if a.has_position)
         in_range_count = sum(

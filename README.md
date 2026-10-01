@@ -14,6 +14,8 @@ aircraft type, distance, origin and destination.
 - **Overhead notifications** — optional event + automation blueprint, disabled by default.
   Enriching notifications with route data via the API is a separate, disabled-by-default toggle.
 - **Route/type enrichment** — optional FlightAware AeroAPI key, cached to control cost.
+- **Callsign retention** — the last callsign seen for each ICAO address is remembered, so brief
+  gaps in the feed's `flight` field don't fall back to the raw hex.
 
 ## Requirements
 

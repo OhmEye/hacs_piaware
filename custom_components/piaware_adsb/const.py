@@ -35,6 +35,9 @@ MAX_SCAN_INTERVAL: Final = 300
 
 SCAN_INTERVAL: Final = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
 
+# How long a previously seen callsign is reused when the feed omits it.
+CALLSIGN_CACHE_TTL: Final = timedelta(hours=6)
+
 # FlightAware AeroAPI
 AEROAPI_BASE: Final = "https://aeroapi.flightaware.com/aeroapi"
 AEROAPI_TIMEOUT: Final = 10
