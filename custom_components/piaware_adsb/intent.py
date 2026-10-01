@@ -32,6 +32,13 @@ def _get_enrichment(hass: HomeAssistant) -> EnrichmentClient | None:
     return None
 
 
+def _get_registration(hass: HomeAssistant):
+    store = hass.data.get(DOMAIN, {})
+    if isinstance(store, dict):
+        return store.get("registration")
+    return None
+
+
 def _recent_in_range(coordinator) -> tuple[Aircraft, datetime] | None:
     """Return the cached last in-radius aircraft when the radius is applied."""
     if coordinator is None or not getattr(coordinator, "nearest_use_radius", False):
@@ -42,9 +49,19 @@ def _recent_in_range(coordinator) -> tuple[Aircraft, datetime] | None:
     return recent
 
 
-def _describe(aircraft: Aircraft, route: RouteInfo | None) -> list[str]:
+def _describe(
+    aircraft: Aircraft,
+    route: RouteInfo | None,
+    registration: str | None = None,
+) -> list[str]:
     """Build the descriptor phrases for an aircraft."""
     parts: list[str] = [aircraft.display_name]
+
+    if registration and registration.upper() not in (
+        (aircraft.callsign or "").upper(),
+        aircraft.hex.upper(),
+    ):
+        parts.append(f"registration number {registration}")
 
     type_name = (route.aircraft_type if route else None) or aircraft.type_code
     if type_name:
@@ -64,9 +81,13 @@ def _describe(aircraft: Aircraft, route: RouteInfo | None) -> list[str]:
     return parts
 
 
-def build_speech(aircraft: Aircraft, route: RouteInfo | None) -> str:
+def build_speech(
+    aircraft: Aircraft,
+    route: RouteInfo | None,
+    registration: str | None = None,
+) -> str:
     """Compose the spoken answer for the nearest aircraft."""
-    return ", ".join(_describe(aircraft, route)) + "."
+    return ", ".join(_describe(aircraft, route, registration)) + "."
 
 
 def _humanize_age(seconds: float) -> str:
@@ -91,9 +112,10 @@ def build_recent_speech(
     route: RouteInfo | None,
     radius_miles: float,
     seconds: float,
+    registration: str | None = None,
 ) -> str:
     """Compose the answer when nothing is in range but one recently was."""
-    recent = ", ".join(_describe(aircraft, route))
+    recent = ", ".join(_describe(aircraft, route, registration))
     return (
         f"No aircraft within {radius_miles:g} miles. "
         f"The most recent was {recent}, {_humanize_age(seconds)}."
@@ -115,6 +137,7 @@ class WhatPlaneIntent(intent_helper.IntentHandler):
         snapshot = getattr(coordinator, "data", None)
         target: Aircraft | None = snapshot.nearest if snapshot else None
         enrichment = _get_enrichment(hass)
+        registration_client = _get_registration(hass)
 
         async def _enrich(aircraft: Aircraft) -> RouteInfo | None:
             if enrichment is None:
@@ -125,11 +148,21 @@ class WhatPlaneIntent(intent_helper.IntentHandler):
                 _LOGGER.exception("Enrichment failed for %s", aircraft.hex)
                 return None
 
+        async def _registration_for(aircraft: Aircraft) -> str | None:
+            if registration_client is None:
+                return None
+            try:
+                return await registration_client.async_get_registration(aircraft.hex)
+            except Exception:  # noqa: BLE001 - never fail the voice query
+                _LOGGER.debug("Registration lookup failed for %s", aircraft.hex)
+                return None
+
         if target is None:
             recent = _recent_in_range(coordinator)
             if recent is not None:
                 aircraft, when = recent
                 route = await _enrich(aircraft)
+                registration = await _registration_for(aircraft)
                 age = (dt_util.utcnow() - when).total_seconds()
                 response.async_set_speech(
                     build_recent_speech(
@@ -137,13 +170,16 @@ class WhatPlaneIntent(intent_helper.IntentHandler):
                         route,
                         coordinator.notification_radius_miles,
                         age,
+                        registration,
                     )
                 )
                 return response
             response.async_set_speech(_NO_TRAFFIC_SPEECH)
             return response
 
-        response.async_set_speech(build_speech(target, await _enrich(target)))
+        route = await _enrich(target)
+        registration = await _registration_for(target)
+        response.async_set_speech(build_speech(target, route, registration))
         return response
 
 

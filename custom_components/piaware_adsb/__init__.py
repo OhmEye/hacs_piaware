@@ -35,6 +35,7 @@ from .const import (
 from .coordinator import PiAwareCoordinator
 from .enrichment import EnrichmentClient
 from .intent import async_setup_intents
+from .registration import Tar1090RegistrationLookup, registration_root
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,6 +75,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     store = hass.data.setdefault(DOMAIN, {})
     store["coordinator"] = coordinator
     store["enrichment"] = enrichment
+    store["registration"] = Tar1090RegistrationLookup(
+        hass, registration_root(coordinator.url)
+    )
 
     await async_setup_intents(hass)
 
@@ -92,6 +96,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         store = hass.data.get(DOMAIN, {})
         store.pop("coordinator", None)
         store.pop("enrichment", None)
+        store.pop("registration", None)
     return unloaded
 
 

@@ -39,8 +39,9 @@ tar1090 aircraft.json ──(aiohttp poll / DataUpdateCoordinator)──▶ [PiA
    ├─ binary_sensor.aircraft_overhead    (only when notifications enabled)
    ├─ event piaware_adsb_aircraft_overhead (rising edge, optional API enrich)
    └─ Assist intent "what plane is that"
-        └─ EnrichmentClient → AeroAPI (cached, de-duped) + hexdb type fallback
-             └─ speech: nearest, or "most recent in-range + how long ago"
+        ├─ EnrichmentClient → AeroAPI (cached, de-duped) + hexdb type fallback
+        ├─ Tar1090RegistrationLookup → local db-*/<prefix>.js trie (no API)
+        └─ speech: nearest, or "most recent in-range + how long ago"
 ```
 
 ### Coordinates / entities
@@ -77,6 +78,10 @@ tar1090 aircraft.json ──(aiohttp poll / DataUpdateCoordinator)──▶ [PiA
    setup and logs that a restart is required.
 9. **Applying an update needs a full HA restart** (custom-integration Python is cached in
    `sys.modules`); HACS can *notice* updates after reloading its config entry.
+10. **Registration is local too**: the feed has no registration, but tar1090 serves its metadata DB
+    under `<root>/<databaseFolder>/<prefix>.js` (folder discovered from `index.html`). `registration.py`
+    follows that trie, so the voice response can say `registration number <reg>` without an external
+    API. Skipped when it equals the callsign/hex.
 
 ## Layout
 
@@ -84,7 +89,8 @@ tar1090 aircraft.json ──(aiohttp poll / DataUpdateCoordinator)──▶ [PiA
 custom_components/piaware_adsb/
   __init__.py     manifest.json     const.py        config_flow.py
   coordinator.py  aircraft.py       callsign.py     geo.py
-  enrichment.py   intent.py         sensor.py       binary_sensor.py
+  enrichment.py   registration.py   intent.py       sensor.py
+  binary_sensor.py
   strings.json + translations/en.json
   custom_sentences/en/what_plane.yaml
 blueprints/automation/piaware_adsb/overhead_notify.yaml

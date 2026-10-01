@@ -16,6 +16,8 @@ aircraft type, distance, origin and destination.
 - **Route/type enrichment** — optional FlightAware AeroAPI key, cached to control cost.
 - **Callsign retention** — the last callsign seen for each ICAO address is remembered, so brief
   gaps in the feed's `flight` field don't fall back to the raw hex.
+- **Registration** — looked up from the receiver's own tar1090 database (no external API) and
+  spoken as *"registration number N123NW"* when it differs from the callsign.
 
 ## Requirements
 

@@ -90,6 +90,46 @@ def test_build_recent_speech() -> None:
     assert "2 minutes ago" in speech
 
 
+def test_build_speech_includes_registration() -> None:
+    speech = build_speech(_aircraft(), None, "N123NW")
+    assert "registration number N123NW" in speech
+
+
+def test_build_speech_skips_registration_matching_callsign() -> None:
+    aircraft = Aircraft(
+        hex="a963ae", callsign="N704CT", distance_miles=1.0, compass="north"
+    )
+    speech = build_speech(aircraft, None, "N704CT")
+    assert "registration number" not in speech
+
+
+def test_build_recent_speech_includes_registration() -> None:
+    speech = build_recent_speech(_aircraft(), None, 5.0, 30, "N123NW")
+    assert "No aircraft within 5 miles" in speech
+    assert "registration number N123NW" in speech
+
+
+class _FakeRegistration:
+    """Stub registration client."""
+
+    async def async_get_registration(self, icao24: str | None) -> str | None:
+        return "N123NW"
+
+
+async def test_intent_includes_registration(hass) -> None:
+    hass.data[DOMAIN] = {
+        "coordinator": SimpleNamespace(data=PiAwareData(nearest=_aircraft())),
+        "enrichment": None,
+        "registration": _FakeRegistration(),
+    }
+
+    response = await WhatPlaneIntent().async_handle(
+        SimpleNamespace(hass=hass, language="en")
+    )
+
+    assert "registration number N123NW" in response.speech["plain"]["speech"]
+
+
 def test_humanize_age() -> None:
     assert _humanize_age(3) == "just now"
     assert _humanize_age(30) == "30 seconds ago"

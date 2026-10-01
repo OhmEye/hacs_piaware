@@ -3,6 +3,14 @@
 All notable changes to this project are documented here. Versions match
 `custom_components/piaware_adsb/manifest.json` and the GitHub release tags.
 
+## [0.4.0] - 2026-10-01
+
+### Added
+- Registration lookup from the receiver's own tar1090 database (no external API): the voice
+  response now includes `registration number <reg>` after the ident, when known and different from
+  the callsign/hex. The database folder is discovered from `index.html` and the
+  `db-*/<prefix>.js` trie is followed on demand.
+
 ## [0.3.3] - 2026-10-01
 
 ### Added

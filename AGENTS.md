@@ -57,6 +57,10 @@ $env:PYTHONPATH = "tools\win_test_shims"   # fcntl/resource shims
 - **Voice fallback:** coordinator keeps `last_in_range = (aircraft, timestamp)`; when
   `nearest_use_radius` is on and nothing is in range, the intent reports the most recent aircraft
   and how long ago.
+- **Registration** is looked up from the receiver's own tar1090 database (no external API):
+  `registration.py` scrapes `databaseFolder` from `index.html` and follows the
+  `db-*/<prefix>.js` trie. Only invoked by the intent, not per poll. The `voice` phrase is
+  `registration number <reg>`, skipped when it equals the callsign/hex.
 - Reference coordinates come from `hass.config.latitude/longitude`.
 - Custom Assist sentences are copied to `config/custom_sentences/en/` at setup; a HA **restart** is
   required for them (and for any custom-integration code update) to take effect.
@@ -86,6 +90,8 @@ The git tag **must equal** the manifest version, or HACS will not surface the up
 - Many entries lack `lat`/`lon`; nearest selection must only consider positioned aircraft.
 - The feed has **no ICAO type code** field, so aircraft type comes only from enrichment
   (FlightAware AeroAPI, else hexdb.io).
+- The feed has **no registration** either; tar1090 exposes it separately via its client-side
+  database (`index.html` → `databaseFolder` → `db-*/<prefix>.js`), which `registration.py` reads.
 - Some aircraft never broadcast an ident and will always display as hex — expected.
 
 ## Module map
@@ -99,5 +105,6 @@ The git tag **must equal** the manifest version, or HACS will not surface the up
 | `callsign.py` | per-hex callsign retention |
 | `geo.py` | haversine distance, bearing, compass |
 | `enrichment.py` | FlightAware AeroAPI + hexdb, TTL cache/de-dup |
+| `registration.py` | local tar1090 DB registration lookup (trie) |
 | `intent.py` | Assist intent, speech building, recent-in-range fallback |
 | `sensor.py` / `binary_sensor.py` | entities (radius/unavailable logic) |
