@@ -1,14 +1,14 @@
 {
   "domain": "piaware_adsb",
   "name": "PiAware ADS-B",
+  "after_dependencies": ["conversation", "assist_pipeline"],
   "codeowners": ["@OhmEye"],
   "config_flow": true,
-  "documentation": "https://github.com/OhmEye/hacs_piaware",
-  "issue_tracker": "https://github.com/OhmEye/hacs_piaware/issues",
   "dependencies": [],
-  "after_dependencies": ["conversation", "assist_pipeline"],
-  "iot_class": "local_polling",
+  "documentation": "https://github.com/OhmEye/hacs_piaware",
   "integration_type": "hub",
+  "iot_class": "local_polling",
+  "issue_tracker": "https://github.com/OhmEye/hacs_piaware/issues",
   "loggers": ["custom_components.piaware_adsb"],
   "requirements": [],
   "version": "0.3.0"

@@ -1,6 +1,6 @@
 [project]
 name = "piaware-adsb"
-version = "0.1.0"
+version = "0.3.0"
 description = "Home Assistant integration for PiAware / tar1090 ADS-B with an Assist voice intent."
 readme = "README.md"
 requires-python = ">=3.12"
@@ -25,3 +25,4 @@ ignore = []
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+pythonpath = ["."]
