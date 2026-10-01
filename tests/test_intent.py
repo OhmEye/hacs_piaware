@@ -17,6 +17,7 @@ from custom_components.piaware_adsb.intent import (
     build_recent_speech,
     build_speech,
 )
+from custom_components.piaware_adsb.registration import AircraftMeta
 
 
 def _aircraft() -> Aircraft:
@@ -91,7 +92,7 @@ def test_build_recent_speech() -> None:
 
 
 def test_build_speech_includes_registration() -> None:
-    speech = build_speech(_aircraft(), None, "N123NW")
+    speech = build_speech(_aircraft(), None, AircraftMeta(registration="N123NW"))
     assert "registration number N123NW" in speech
 
 
@@ -99,35 +100,65 @@ def test_build_speech_skips_registration_matching_callsign() -> None:
     aircraft = Aircraft(
         hex="a963ae", callsign="N704CT", distance_miles=1.0, compass="north"
     )
-    speech = build_speech(aircraft, None, "N704CT")
+    speech = build_speech(aircraft, None, AircraftMeta(registration="N704CT"))
     assert "registration number" not in speech
 
 
+def test_build_speech_uses_db_type_name() -> None:
+    speech = build_speech(
+        Aircraft(hex="a1ecfd", callsign="RPA5678"),
+        None,
+        AircraftMeta(type_name="EMBRAER ERJ 170-200"),
+    )
+    assert "an EMBRAER ERJ 170-200" in speech
+
+
+def test_build_speech_falls_back_to_type_code() -> None:
+    speech = build_speech(
+        Aircraft(hex="a3f793"), None, AircraftMeta(type_code="A320")
+    )
+    assert "an A320" in speech
+
+
+def test_build_speech_prefers_descriptive_type_over_route_code() -> None:
+    route = RouteInfo(aircraft_type="B738")
+    speech = build_speech(
+        Aircraft(hex="ac1466", callsign="DAL336"),
+        route,
+        AircraftMeta(type_name="Boeing 737-800"),
+    )
+    assert "a Boeing 737-800" in speech
+
+
 def test_build_recent_speech_includes_registration() -> None:
-    speech = build_recent_speech(_aircraft(), None, 5.0, 30, "N123NW")
+    speech = build_recent_speech(
+        _aircraft(), None, 5.0, 30, AircraftMeta(registration="N123NW")
+    )
     assert "No aircraft within 5 miles" in speech
     assert "registration number N123NW" in speech
 
 
-class _FakeRegistration:
-    """Stub registration client."""
+class _FakeDb:
+    """Stub tar1090 database client."""
 
-    async def async_get_registration(self, icao24: str | None) -> str | None:
-        return "N123NW"
+    async def async_get_metadata(self, icao24: str | None) -> AircraftMeta:
+        return AircraftMeta(registration="N123NW", type_name="Boeing 737-800")
 
 
-async def test_intent_includes_registration(hass) -> None:
+async def test_intent_includes_registration_and_type(hass) -> None:
     hass.data[DOMAIN] = {
         "coordinator": SimpleNamespace(data=PiAwareData(nearest=_aircraft())),
         "enrichment": None,
-        "registration": _FakeRegistration(),
+        "tar1090_db": _FakeDb(),
     }
 
     response = await WhatPlaneIntent().async_handle(
         SimpleNamespace(hass=hass, language="en")
     )
+    speech = response.speech["plain"]["speech"]
 
-    assert "registration number N123NW" in response.speech["plain"]["speech"]
+    assert "registration number N123NW" in speech
+    assert "a Boeing 737-800" in speech
 
 
 def test_humanize_age() -> None:

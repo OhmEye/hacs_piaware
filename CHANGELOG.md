@@ -3,6 +3,14 @@
 All notable changes to this project are documented here. Versions match
 `custom_components/piaware_adsb/manifest.json` and the GitHub release tags.
 
+## [0.5.0] - 2026-10-01
+
+### Added
+- Aircraft type from the receiver's own tar1090 database (no external API). The DB entry
+  `[registration, type_code, flags, long_name]` supplies a human-readable type name, spoken as
+  `a/an <long_name>` (falling back to the ICAO type code). Unknown codes (`00`/empty) are ignored.
+- The speech picks the most descriptive available type: local long name, else enrichment/code.
+
 ## [0.4.0] - 2026-10-01
 
 ### Added

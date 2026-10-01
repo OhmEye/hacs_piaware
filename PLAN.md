@@ -40,7 +40,7 @@ tar1090 aircraft.json ──(aiohttp poll / DataUpdateCoordinator)──▶ [PiA
    ├─ event piaware_adsb_aircraft_overhead (rising edge, optional API enrich)
    └─ Assist intent "what plane is that"
         ├─ EnrichmentClient → AeroAPI (cached, de-duped) + hexdb type fallback
-        ├─ Tar1090RegistrationLookup → local db-*/<prefix>.js trie (no API)
+        ├─ Tar1090Database → local db-*/<prefix>.js trie: registration + type (no API)
         └─ speech: nearest, or "most recent in-range + how long ago"
 ```
 
@@ -78,10 +78,11 @@ tar1090 aircraft.json ──(aiohttp poll / DataUpdateCoordinator)──▶ [PiA
    setup and logs that a restart is required.
 9. **Applying an update needs a full HA restart** (custom-integration Python is cached in
    `sys.modules`); HACS can *notice* updates after reloading its config entry.
-10. **Registration is local too**: the feed has no registration, but tar1090 serves its metadata DB
-    under `<root>/<databaseFolder>/<prefix>.js` (folder discovered from `index.html`). `registration.py`
-    follows that trie, so the voice response can say `registration number <reg>` without an external
-    API. Skipped when it equals the callsign/hex.
+10. **Registration and type are local too**: the feed has neither, but tar1090 serves its metadata
+    DB under `<root>/<databaseFolder>/<prefix>.js` (folder discovered from `index.html`). Each entry
+    is `[registration, type_code, flags, long_name]`. `registration.py` follows that trie, so the
+    voice response can say `registration number <reg>` and `a/an <long_name>` without an external
+    API. Codes of `00` and empty values are treated as unknown; enrichment remains the fallback.
 
 ## Layout
 

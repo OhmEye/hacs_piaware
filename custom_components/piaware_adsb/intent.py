@@ -12,6 +12,7 @@ from homeassistant.util import dt as dt_util
 from .aircraft import Aircraft
 from .const import DOMAIN, INTENT_WHAT_PLANE
 from .enrichment import EnrichmentClient, RouteInfo
+from .registration import AircraftMeta
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,10 +33,10 @@ def _get_enrichment(hass: HomeAssistant) -> EnrichmentClient | None:
     return None
 
 
-def _get_registration(hass: HomeAssistant):
+def _get_tar1090_db(hass: HomeAssistant):
     store = hass.data.get(DOMAIN, {})
     if isinstance(store, dict):
-        return store.get("registration")
+        return store.get("tar1090_db")
     return None
 
 
@@ -49,23 +50,45 @@ def _recent_in_range(coordinator) -> tuple[Aircraft, datetime] | None:
     return recent
 
 
+def _select_type_name(
+    route: RouteInfo | None,
+    meta: AircraftMeta | None,
+    aircraft: Aircraft,
+) -> str | None:
+    """Pick the friendliest available aircraft type description."""
+    candidates = [
+        route.aircraft_type if route else None,
+        meta.type_name if meta else None,
+        meta.type_code if meta else None,
+        aircraft.type_code,
+    ]
+    present = [c for c in candidates if c]
+    for candidate in present:
+        # Prefer a descriptive name (e.g. "Boeing 737-800") over a bare ICAO code.
+        if " " in candidate or any(ch.islower() for ch in candidate):
+            return candidate
+    return present[0] if present else None
+
+
 def _describe(
     aircraft: Aircraft,
     route: RouteInfo | None,
-    registration: str | None = None,
+    meta: AircraftMeta | None = None,
 ) -> list[str]:
     """Build the descriptor phrases for an aircraft."""
     parts: list[str] = [aircraft.display_name]
 
+    registration = meta.registration if meta else None
     if registration and registration.upper() not in (
         (aircraft.callsign or "").upper(),
         aircraft.hex.upper(),
     ):
         parts.append(f"registration number {registration}")
 
-    type_name = (route.aircraft_type if route else None) or aircraft.type_code
+    type_name = _select_type_name(route, meta, aircraft)
     if type_name:
-        parts.append(f"a {type_name}")
+        article = "an" if type_name[:1].upper() in "AEIOU" else "a"
+        parts.append(f"{article} {type_name}")
 
     if aircraft.distance_miles is not None:
         distance = round(aircraft.distance_miles)
@@ -84,10 +107,10 @@ def _describe(
 def build_speech(
     aircraft: Aircraft,
     route: RouteInfo | None,
-    registration: str | None = None,
+    meta: AircraftMeta | None = None,
 ) -> str:
     """Compose the spoken answer for the nearest aircraft."""
-    return ", ".join(_describe(aircraft, route, registration)) + "."
+    return ", ".join(_describe(aircraft, route, meta)) + "."
 
 
 def _humanize_age(seconds: float) -> str:
@@ -112,10 +135,10 @@ def build_recent_speech(
     route: RouteInfo | None,
     radius_miles: float,
     seconds: float,
-    registration: str | None = None,
+    meta: AircraftMeta | None = None,
 ) -> str:
     """Compose the answer when nothing is in range but one recently was."""
-    recent = ", ".join(_describe(aircraft, route, registration))
+    recent = ", ".join(_describe(aircraft, route, meta))
     return (
         f"No aircraft within {radius_miles:g} miles. "
         f"The most recent was {recent}, {_humanize_age(seconds)}."
@@ -137,7 +160,7 @@ class WhatPlaneIntent(intent_helper.IntentHandler):
         snapshot = getattr(coordinator, "data", None)
         target: Aircraft | None = snapshot.nearest if snapshot else None
         enrichment = _get_enrichment(hass)
-        registration_client = _get_registration(hass)
+        tar1090_db = _get_tar1090_db(hass)
 
         async def _enrich(aircraft: Aircraft) -> RouteInfo | None:
             if enrichment is None:
@@ -148,13 +171,13 @@ class WhatPlaneIntent(intent_helper.IntentHandler):
                 _LOGGER.exception("Enrichment failed for %s", aircraft.hex)
                 return None
 
-        async def _registration_for(aircraft: Aircraft) -> str | None:
-            if registration_client is None:
+        async def _metadata_for(aircraft: Aircraft) -> AircraftMeta | None:
+            if tar1090_db is None:
                 return None
             try:
-                return await registration_client.async_get_registration(aircraft.hex)
+                return await tar1090_db.async_get_metadata(aircraft.hex)
             except Exception:  # noqa: BLE001 - never fail the voice query
-                _LOGGER.debug("Registration lookup failed for %s", aircraft.hex)
+                _LOGGER.debug("tar1090 metadata lookup failed for %s", aircraft.hex)
                 return None
 
         if target is None:
@@ -162,7 +185,7 @@ class WhatPlaneIntent(intent_helper.IntentHandler):
             if recent is not None:
                 aircraft, when = recent
                 route = await _enrich(aircraft)
-                registration = await _registration_for(aircraft)
+                meta = await _metadata_for(aircraft)
                 age = (dt_util.utcnow() - when).total_seconds()
                 response.async_set_speech(
                     build_recent_speech(
@@ -170,7 +193,7 @@ class WhatPlaneIntent(intent_helper.IntentHandler):
                         route,
                         coordinator.notification_radius_miles,
                         age,
-                        registration,
+                        meta,
                     )
                 )
                 return response
@@ -178,8 +201,8 @@ class WhatPlaneIntent(intent_helper.IntentHandler):
             return response
 
         route = await _enrich(target)
-        registration = await _registration_for(target)
-        response.async_set_speech(build_speech(target, route, registration))
+        meta = await _metadata_for(target)
+        response.async_set_speech(build_speech(target, route, meta))
         return response
 
 
