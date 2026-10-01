@@ -58,6 +58,10 @@ The notification radius can be reused independently for two other entities:
   and the "what plane is that" voice intent only consider aircraft inside the radius. When off
   (default) the absolute nearest aircraft is used regardless of distance.
 
+With a toggle on, when no aircraft is within the radius the affected entities become
+**unavailable** instead of reporting `0` or `unknown`, so no state is emitted until an aircraft is
+actually in range.
+
 ## Assist setup
 
 At setup the integration copies `custom_sentences/en/what_plane.yaml` into

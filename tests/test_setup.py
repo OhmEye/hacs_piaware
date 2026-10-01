@@ -100,9 +100,34 @@ async def test_radius_toggles_restrict_count_and_nearest(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Nothing is within 0.5 mi, so the count is 0 and there is no nearest aircraft.
-    assert hass.states.get("sensor.piaware_ads_b_aircraft_in_range").state == "0"
-    assert hass.states.get("sensor.piaware_ads_b_nearest_aircraft").state == "unknown"
+    # Nothing is within 0.5 mi, so the radius-limited sensors are unavailable
+    # rather than reporting 0 / unknown.
+    assert hass.states.get("sensor.piaware_ads_b_aircraft_in_range").state == "unavailable"
+    assert hass.states.get("sensor.piaware_ads_b_nearest_aircraft").state == "unavailable"
+    assert hass.states.get("sensor.piaware_ads_b_nearest_aircraft_distance").state == "unavailable"
+
+
+async def test_radius_toggles_off_ignore_radius(
+    hass: HomeAssistant, aioclient_mock, aircraft_payload: dict
+) -> None:
+    aioclient_mock.get(FEED_URL, json=aircraft_payload)
+    hass.config.latitude = 43.0
+    hass.config.longitude = -76.0
+
+    data = {
+        **ENTRY_DATA,
+        CONF_NOTIFICATION_RADIUS_MILES: 0.5,
+        CONF_COUNT_USE_RADIUS: False,
+        CONF_NEAREST_USE_RADIUS: False,
+    }
+    entry = MockConfigEntry(domain=DOMAIN, data=data)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Toggles off: the tiny radius is ignored and values are always reported.
+    assert hass.states.get("sensor.piaware_ads_b_aircraft_in_range").state == "4"
+    assert hass.states.get("sensor.piaware_ads_b_nearest_aircraft").state == "GRND1"
 
 
 async def test_options_flow_updates_radius(

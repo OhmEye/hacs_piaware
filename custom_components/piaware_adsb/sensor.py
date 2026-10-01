@@ -81,6 +81,9 @@ SENSORS: tuple[PiAwareSensorEntityDescription, ...] = (
 )
 
 
+_NEAREST_KEYS = frozenset({"nearest_aircraft", "nearest_distance", "nearest_altitude"})
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -111,6 +114,24 @@ class PiAwareSensor(CoordinatorEntity[PiAwareCoordinator], SensorEntity):
             "identifiers": {(DOMAIN, entry.entry_id)},
             "name": "PiAware ADS-B",
         }
+
+    @property
+    def available(self) -> bool:
+        """Hide radius-limited entities when nothing is within the radius.
+
+        When the count/nearest radius toggle is on and no aircraft is in range,
+        report ``unavailable`` instead of a misleading ``0`` or ``unknown`` so no
+        state event is generated until an aircraft is actually in range.
+        """
+        if not super().available:
+            return False
+        data = self.coordinator.data
+        key = self.entity_description.key
+        if key == "aircraft_count" and self.coordinator.count_use_radius:
+            return data.in_range_count > 0
+        if key in _NEAREST_KEYS and self.coordinator.nearest_use_radius:
+            return data.nearest is not None
+        return True
 
     @property
     def native_value(self) -> Any:
