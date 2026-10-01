@@ -17,7 +17,13 @@ CONF_NOTIFICATION_RADIUS_MILES: Final = "notification_radius_miles"
 CONF_ENRICH_NOTIFICATIONS: Final = "enrich_notifications"
 CONF_COUNT_USE_RADIUS: Final = "count_use_radius"
 CONF_NEAREST_USE_RADIUS: Final = "nearest_use_radius"
+CONF_PHONETIC_SPEECH: Final = "phonetic_speech"
+CONF_CALLSIGN_STYLE: Final = "callsign_style"
 CONF_INSTALL_SENTENCES: Final = "install_sentences"
+
+# Callsign pronunciation styles
+CALLSIGN_STYLE_AIRLINE: Final = "airline"
+CALLSIGN_STYLE_PHONETIC: Final = "phonetic"
 
 DEFAULT_HOST: Final = "piaware.lan"
 DEFAULT_PORT: Final = 80
@@ -28,6 +34,8 @@ DEFAULT_NOTIFICATION_RADIUS_MILES: Final = 5.0
 DEFAULT_ENRICH_NOTIFICATIONS: Final = False
 DEFAULT_COUNT_USE_RADIUS: Final = False
 DEFAULT_NEAREST_USE_RADIUS: Final = False
+DEFAULT_PHONETIC_SPEECH: Final = True
+DEFAULT_CALLSIGN_STYLE: Final = CALLSIGN_STYLE_AIRLINE
 DEFAULT_INSTALL_SENTENCES: Final = True
 
 MIN_SCAN_INTERVAL: Final = 2

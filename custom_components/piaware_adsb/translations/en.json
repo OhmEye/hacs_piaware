@@ -15,6 +15,8 @@
           "enrich_notifications": "Use the FlightAware API for overhead notifications",
           "count_use_radius": "Only count aircraft within the notification radius",
           "nearest_use_radius": "Only report the nearest aircraft within the notification radius",
+          "phonetic_speech": "Spell idents and registrations using aviation phonetics",
+          "callsign_style": "Callsign pronunciation",
           "install_sentences": "Install Assist sentences for \"what plane is that\""
         }
       }
@@ -42,6 +44,8 @@
           "enrich_notifications": "Use the FlightAware API for overhead notifications",
           "count_use_radius": "Only count aircraft within the notification radius",
           "nearest_use_radius": "Only report the nearest aircraft within the notification radius",
+          "phonetic_speech": "Spell idents and registrations using aviation phonetics",
+          "callsign_style": "Callsign pronunciation",
           "install_sentences": "Install Assist sentences for \"what plane is that\""
         }
       }

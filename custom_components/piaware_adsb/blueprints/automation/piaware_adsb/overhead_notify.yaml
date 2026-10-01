@@ -50,7 +50,10 @@ variables:
   push_actions: !input notify_action
   min_altitude: !input altitude_filter
   message: >-
-    {{ trigger.event.data.callsign or trigger.event.data.hex | upper }}
+    {{ trigger.event.data.callsign_spoken or trigger.event.data.callsign
+       or trigger.event.data.hex | upper }}
+    {%- if trigger.event.data.registration_spoken %}, registration number
+    {{ trigger.event.data.registration_spoken }}{% endif %}
     ({{ trigger.event.data.type_code or 'unknown type' }}) is
     {{ trigger.event.data.distance_miles | round(1) }} miles
     {{ trigger.event.data.compass or 'nearby' }}

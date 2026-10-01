@@ -22,11 +22,13 @@ from .const import (
     EVENT_AIRCRAFT_OVERHEAD,
     SIGNAL_AIRCRAFT_OVERHEAD,
 )
+from .phonetics import spoken_callsign, spoken_registration
 
 if TYPE_CHECKING:
     from homeassistant.config_entries import ConfigEntry
 
     from .enrichment import EnrichmentClient
+    from .registration import Tar1090Database
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,8 +71,11 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
         enrich_notifications: bool = False,
         count_use_radius: bool = False,
         nearest_use_radius: bool = False,
+        phonetic_speech: bool = True,
+        callsign_style: str = "airline",
         config_entry: ConfigEntry | None = None,
         enrichment: EnrichmentClient | None = None,
+        tar1090_db: Tar1090Database | None = None,
     ) -> None:
         interval = timedelta(seconds=scan_interval)
         try:
@@ -95,7 +100,10 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
         self.enrich_notifications = enrich_notifications
         self.count_use_radius = count_use_radius
         self.nearest_use_radius = nearest_use_radius
+        self.phonetic_speech = phonetic_speech
+        self.callsign_style = callsign_style
         self._enrichment = enrichment
+        self._tar1090_db = tar1090_db
         self._was_overhead = False
         self._callsign_cache = CallsignCache(CALLSIGN_CACHE_TTL)
         # Most recent aircraft seen within the notification radius and when.
@@ -183,6 +191,29 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
                 if route.aircraft_type:
                     event_data["type_code"] = route.aircraft_type
                 event_data["enriched"] = route.has_route
+
+            raw_callsign = target.callsign or target.hex.upper()
+            if self.phonetic_speech:
+                event_data["callsign_spoken"] = (
+                    spoken_callsign(
+                        target.callsign, event_data["airline"], self.callsign_style
+                    )
+                    or raw_callsign
+                )
+            else:
+                event_data["callsign_spoken"] = raw_callsign
+
+            registration = None
+            if self._tar1090_db is not None:
+                try:
+                    meta = await self._tar1090_db.async_get_metadata(target.hex)
+                    registration = meta.registration if meta else None
+                except Exception:  # noqa: BLE001 - optional enrichment
+                    _LOGGER.debug("Registration lookup failed for %s", target.hex)
+            event_data["registration"] = registration
+            event_data["registration_spoken"] = (
+                spoken_registration(registration) if self.phonetic_speech else registration
+            )
 
             self.hass.bus.async_fire(EVENT_AIRCRAFT_OVERHEAD, event_data)
             async_dispatcher_send(self.hass, SIGNAL_AIRCRAFT_OVERHEAD, target)

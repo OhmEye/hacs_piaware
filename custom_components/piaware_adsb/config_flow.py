@@ -19,7 +19,10 @@ from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
+    CALLSIGN_STYLE_AIRLINE,
+    CALLSIGN_STYLE_PHONETIC,
     CONF_API_KEY,
+    CONF_CALLSIGN_STYLE,
     CONF_COUNT_USE_RADIUS,
     CONF_ENRICH_NOTIFICATIONS,
     CONF_HOST,
@@ -28,8 +31,10 @@ from .const import (
     CONF_NOTIFICATION_RADIUS_MILES,
     CONF_NOTIFICATIONS_ENABLED,
     CONF_PATH,
+    CONF_PHONETIC_SPEECH,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
+    DEFAULT_CALLSIGN_STYLE,
     DEFAULT_COUNT_USE_RADIUS,
     DEFAULT_ENRICH_NOTIFICATIONS,
     DEFAULT_HOST,
@@ -38,6 +43,7 @@ from .const import (
     DEFAULT_NOTIFICATION_RADIUS_MILES,
     DEFAULT_NOTIFICATIONS_ENABLED,
     DEFAULT_PATH,
+    DEFAULT_PHONETIC_SPEECH,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
@@ -103,6 +109,28 @@ def _schema(defaults: dict[str, Any]) -> vol.Schema:
                     CONF_NEAREST_USE_RADIUS, DEFAULT_NEAREST_USE_RADIUS
                 ),
             ): selector.BooleanSelector(),
+            vol.Required(
+                CONF_PHONETIC_SPEECH,
+                default=defaults.get(CONF_PHONETIC_SPEECH, DEFAULT_PHONETIC_SPEECH),
+            ): selector.BooleanSelector(),
+            vol.Required(
+                CONF_CALLSIGN_STYLE,
+                default=defaults.get(CONF_CALLSIGN_STYLE, DEFAULT_CALLSIGN_STYLE),
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[
+                        selector.SelectOptionDict(
+                            value=CALLSIGN_STYLE_AIRLINE,
+                            label="Airline name + digits when known",
+                        ),
+                        selector.SelectOptionDict(
+                            value=CALLSIGN_STYLE_PHONETIC,
+                            label="Spell every character",
+                        ),
+                    ],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
             vol.Required(
                 CONF_INSTALL_SENTENCES,
                 default=defaults.get(CONF_INSTALL_SENTENCES, DEFAULT_INSTALL_SENTENCES),

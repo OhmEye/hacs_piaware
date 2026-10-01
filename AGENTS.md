@@ -64,6 +64,10 @@ $env:PYTHONPATH = "tools\win_test_shims"   # fcntl/resource shims
   voice phrase is `registration number <reg>` (skipped when it equals the callsign/hex) and the
   type is spoken as `a/an <long_name>` when available, falling back to the ICAO type code.
   Note: `code`/`name` are absent (or `00`) for some aircraft — always handle empty metadata.
+- **Phonetics**: `phonetics.py` (`spell`, `spoken_callsign`, `spoken_registration`) converts idents
+  and registrations to ICAO/NATO phonetics for speech (voice responses + overhead notifications).
+  Gated by `phonetic_speech` (default on) and `callsign_style` (`airline` name+digits when known,
+  else spell; or `phonetic` to always spell). Sensor states/Activity stay raw.
 - **Route labels**: `RouteInfo.origin_label`/`destination_label` prefer AeroAPI `city` →
   `airport_name` → code; the intent speaks these (e.g. "from Atlanta to Tokyo Haneda"). The
   overhead event exposes both codes and `origin_name`/`destination_name`.
@@ -118,5 +122,6 @@ The git tag **must equal** the manifest version, or HACS will not surface the up
 | `geo.py` | haversine distance, bearing, compass |
 | `enrichment.py` | FlightAware AeroAPI + hexdb, TTL cache/de-dup |
 | `registration.py` | local tar1090 DB metadata: registration + type (trie) |
+| `phonetics.py` | ICAO/NATO spelling for spoken idents/registrations |
 | `intent.py` | Assist intent, speech building, recent-in-range fallback |
 | `sensor.py` / `binary_sensor.py` | entities (radius/unavailable logic) |

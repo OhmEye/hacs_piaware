@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from .const import (
     BLUEPRINT_FILE,
     CONF_API_KEY,
+    CONF_CALLSIGN_STYLE,
     CONF_COUNT_USE_RADIUS,
     CONF_ENRICH_NOTIFICATIONS,
     CONF_HOST,
@@ -19,9 +20,11 @@ from .const import (
     CONF_NOTIFICATION_RADIUS_MILES,
     CONF_NOTIFICATIONS_ENABLED,
     CONF_PATH,
+    CONF_PHONETIC_SPEECH,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     CUSTOM_SENTENCE_FILE,
+    DEFAULT_CALLSIGN_STYLE,
     DEFAULT_COUNT_USE_RADIUS,
     DEFAULT_ENRICH_NOTIFICATIONS,
     DEFAULT_INSTALL_SENTENCES,
@@ -29,11 +32,12 @@ from .const import (
     DEFAULT_NOTIFICATION_RADIUS_MILES,
     DEFAULT_NOTIFICATIONS_ENABLED,
     DEFAULT_PATH,
+    DEFAULT_PHONETIC_SPEECH,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
 )
-from .coordinator import PiAwareCoordinator
+from .coordinator import PiAwareCoordinator, build_url
 from .enrichment import EnrichmentClient
 from .intent import async_setup_intents
 from .registration import Tar1090Database, tar1090_root
@@ -48,6 +52,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     config = {**entry.data, **entry.options}
 
     enrichment = EnrichmentClient(hass, config.get(CONF_API_KEY))
+    feed_url = build_url(
+        config[CONF_HOST],
+        config.get(CONF_PORT, DEFAULT_PORT),
+        config.get(CONF_PATH, DEFAULT_PATH),
+    )
+    tar1090_db = Tar1090Database(hass, tar1090_root(feed_url))
 
     coordinator = PiAwareCoordinator(
         hass,
@@ -69,14 +79,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         nearest_use_radius=config.get(
             CONF_NEAREST_USE_RADIUS, DEFAULT_NEAREST_USE_RADIUS
         ),
+        phonetic_speech=config.get(CONF_PHONETIC_SPEECH, DEFAULT_PHONETIC_SPEECH),
+        callsign_style=config.get(CONF_CALLSIGN_STYLE, DEFAULT_CALLSIGN_STYLE),
         enrichment=enrichment,
+        tar1090_db=tar1090_db,
     )
     await coordinator.async_config_entry_first_refresh()
 
     store = hass.data.setdefault(DOMAIN, {})
     store["coordinator"] = coordinator
     store["enrichment"] = enrichment
-    store["tar1090_db"] = Tar1090Database(hass, tar1090_root(coordinator.url))
+    store["tar1090_db"] = tar1090_db
 
     await async_setup_intents(hass)
 

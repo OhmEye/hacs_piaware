@@ -21,6 +21,10 @@ aircraft type, distance, origin and destination.
 - **Registration & type** — looked up from the receiver's own tar1090 database (no external API):
   the registration is spoken as *"registration number N123NW"* (skipped when it equals the
   callsign), and the aircraft type as *"a Boeing 737-800"* using the database's description.
+- **Aviation phonetics** — idents and registrations are spoken with the ICAO/NATO alphabet and
+  digit words (`N704CT` → *"November seven zero four Charlie Tango"*); with the default
+  `airline` style, a `<letters><digits>` callsign uses the airline name + digits when known
+  (`DAL100` → *"Delta Air Lines one zero zero"*). Both configurable.
 
 ## Requirements
 
@@ -68,6 +72,21 @@ The notification radius can be reused independently for two other entities:
 With a toggle on, when no aircraft is within the radius the affected entities become
 **unavailable** instead of reporting `0` or `unknown`, so no state is emitted until an aircraft is
 actually in range.
+
+### Phonetic speech
+
+TTS engines read `N704CT`/`DAL100` as words, which is hard to understand, so idents and
+registrations are converted to aviation phonetics before speaking (voice responses and overhead
+notifications):
+
+- **Spell idents and registrations using aviation phonetics** (default on) — letters use the
+  ICAO/NATO alphabet and digits are spoken individually (`9` → "niner").
+- **Callsign pronunciation**:
+  - **Airline name + digits when known** (default) — `DAL100` → *"Delta Air Lines one zero zero"*
+    (uses the AeroAPI airline; falls back to spelling).
+  - **Spell every character** — `DAL100` → *"Delta Alpha Lima one zero zero"*.
+
+Sensor states and the Activity/logbook entries always stay raw.
 
 ## Assist setup
 

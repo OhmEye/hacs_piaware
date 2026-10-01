@@ -11,6 +11,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.piaware_adsb.const import (
     CONF_API_KEY,
+    CONF_CALLSIGN_STYLE,
     CONF_COUNT_USE_RADIUS,
     CONF_ENRICH_NOTIFICATIONS,
     CONF_HOST,
@@ -19,6 +20,7 @@ from custom_components.piaware_adsb.const import (
     CONF_NOTIFICATION_RADIUS_MILES,
     CONF_NOTIFICATIONS_ENABLED,
     CONF_PATH,
+    CONF_PHONETIC_SPEECH,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
     DOMAIN,
@@ -38,6 +40,8 @@ ENTRY_DATA = {
     CONF_ENRICH_NOTIFICATIONS: False,
     CONF_COUNT_USE_RADIUS: False,
     CONF_NEAREST_USE_RADIUS: False,
+    CONF_PHONETIC_SPEECH: True,
+    CONF_CALLSIGN_STYLE: "airline",
     CONF_INSTALL_SENTENCES: False,
 }
 
@@ -211,6 +215,7 @@ async def test_overhead_event_fires(
 
     assert len(events) == 1
     assert events[0].data["callsign"] == "GRND1"
+    assert events[0].data["callsign_spoken"] == "Golf Romeo November Delta one"
     assert events[0].data["enriched"] is False
     # Only the aircraft feed was fetched; no API call without the enrichment toggle.
     assert aioclient_mock.call_count == 1
@@ -238,3 +243,5 @@ async def test_overhead_event_enriched_when_enabled(
     assert events[0].data["destination"] == "JFK"
     assert events[0].data["airline"] == "Delta Air Lines"
     assert events[0].data["enriched"] is True
+    # Airline style uses the name plus spelled digits.
+    assert events[0].data["callsign_spoken"] == "Delta Air Lines one"

@@ -12,6 +12,7 @@ from homeassistant.util import dt as dt_util
 from .aircraft import Aircraft
 from .const import DOMAIN, INTENT_WHAT_PLANE
 from .enrichment import EnrichmentClient, RouteInfo
+from .phonetics import spell, spoken_callsign, spoken_registration
 from .registration import AircraftMeta
 
 _LOGGER = logging.getLogger(__name__)
@@ -70,20 +71,36 @@ def _select_type_name(
     return present[0] if present else None
 
 
+def _spoken_name(
+    aircraft: Aircraft, route: RouteInfo | None, phonetic: bool, style: str
+) -> str:
+    """Return the spoken aircraft name, spelled phonetically when enabled."""
+    if not phonetic:
+        return aircraft.display_name
+    if aircraft.callsign:
+        spoken = spoken_callsign(aircraft.callsign, route.airline if route else None, style)
+        return spoken or aircraft.display_name
+    return spell(aircraft.hex)
+
+
 def _describe(
     aircraft: Aircraft,
     route: RouteInfo | None,
     meta: AircraftMeta | None = None,
+    *,
+    phonetic: bool = True,
+    callsign_style: str = "airline",
 ) -> list[str]:
     """Build the descriptor phrases for an aircraft."""
-    parts: list[str] = [aircraft.display_name]
+    parts: list[str] = [_spoken_name(aircraft, route, phonetic, callsign_style)]
 
     registration = meta.registration if meta else None
     if registration and registration.upper() not in (
         (aircraft.callsign or "").upper(),
         aircraft.hex.upper(),
     ):
-        parts.append(f"registration number {registration}")
+        spoken_reg = spoken_registration(registration) if phonetic else registration
+        parts.append(f"registration number {spoken_reg}")
 
     type_name = _select_type_name(route, meta, aircraft)
     if type_name:
@@ -110,9 +127,17 @@ def build_speech(
     aircraft: Aircraft,
     route: RouteInfo | None,
     meta: AircraftMeta | None = None,
+    *,
+    phonetic: bool = True,
+    callsign_style: str = "airline",
 ) -> str:
     """Compose the spoken answer for the nearest aircraft."""
-    return ", ".join(_describe(aircraft, route, meta)) + "."
+    return (
+        ", ".join(
+            _describe(aircraft, route, meta, phonetic=phonetic, callsign_style=callsign_style)
+        )
+        + "."
+    )
 
 
 def _humanize_age(seconds: float) -> str:
@@ -138,9 +163,14 @@ def build_recent_speech(
     radius_miles: float,
     seconds: float,
     meta: AircraftMeta | None = None,
+    *,
+    phonetic: bool = True,
+    callsign_style: str = "airline",
 ) -> str:
     """Compose the answer when nothing is in range but one recently was."""
-    recent = ", ".join(_describe(aircraft, route, meta))
+    recent = ", ".join(
+        _describe(aircraft, route, meta, phonetic=phonetic, callsign_style=callsign_style)
+    )
     return (
         f"No aircraft within {radius_miles:g} miles. "
         f"The most recent was {recent}, {_humanize_age(seconds)}."
@@ -163,6 +193,8 @@ class WhatPlaneIntent(intent_helper.IntentHandler):
         target: Aircraft | None = snapshot.nearest if snapshot else None
         enrichment = _get_enrichment(hass)
         tar1090_db = _get_tar1090_db(hass)
+        phonetic = getattr(coordinator, "phonetic_speech", True)
+        callsign_style = getattr(coordinator, "callsign_style", "airline")
 
         async def _enrich(aircraft: Aircraft) -> RouteInfo | None:
             if enrichment is None:
@@ -196,6 +228,8 @@ class WhatPlaneIntent(intent_helper.IntentHandler):
                         coordinator.notification_radius_miles,
                         age,
                         meta,
+                        phonetic=phonetic,
+                        callsign_style=callsign_style,
                     )
                 )
                 return response
@@ -204,7 +238,11 @@ class WhatPlaneIntent(intent_helper.IntentHandler):
 
         route = await _enrich(target)
         meta = await _metadata_for(target)
-        response.async_set_speech(build_speech(target, route, meta))
+        response.async_set_speech(
+            build_speech(
+                target, route, meta, phonetic=phonetic, callsign_style=callsign_style
+            )
+        )
         return response
 
 

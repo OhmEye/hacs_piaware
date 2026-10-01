@@ -84,7 +84,12 @@ tar1090 aircraft.json ──(aiohttp poll / DataUpdateCoordinator)──▶ [PiA
     which **Assist satellites** announce (entity selector, `domain: assist_satellite`) and keeps an
     optional action input; blueprints inject actions via `sequence: !input` (not `action: !input`
     + `data:`), and entity services reject extra keys like `title`.
-11. **Registration and type are local too**: the feed has neither, but tar1090 serves its metadata
+11. **Phonetic speech**: TTS mangles `N704CT`/`DAL100`, so `phonetics.py` spells idents and
+    registrations with the ICAO/NATO alphabet and digit words (9 = "niner"). Config: `phonetic_speech`
+    (default on) and `callsign_style` (`airline` = name + digits when known else spell; `phonetic` =
+    always spell). Applied to the voice intent and the overhead event (`callsign_spoken` /
+    `registration_spoken`); sensor states and Activity stay raw. No SSML dependency.
+12. **Registration and type are local too**: the feed has neither, but tar1090 serves its metadata
     DB under `<root>/<databaseFolder>/<prefix>.js` (folder discovered from `index.html`). Each entry
     is `[registration, type_code, flags, long_name]`. `registration.py` follows that trie, so the
     voice response can say `registration number <reg>` and `a/an <long_name>` without an external
@@ -96,8 +101,8 @@ tar1090 aircraft.json ──(aiohttp poll / DataUpdateCoordinator)──▶ [PiA
 custom_components/piaware_adsb/
   __init__.py     manifest.json     const.py        config_flow.py
   coordinator.py  aircraft.py       callsign.py     geo.py
-  enrichment.py   registration.py   intent.py       sensor.py
-  binary_sensor.py
+  enrichment.py   registration.py   phonetics.py    intent.py
+  sensor.py       binary_sensor.py
   strings.json + translations/en.json
   custom_sentences/en/what_plane.yaml
   blueprints/automation/piaware_adsb/overhead_notify.yaml   (bundled, installed at setup)

@@ -21,6 +21,8 @@ USER_INPUT = {
     "enrich_notifications": False,
     "count_use_radius": False,
     "nearest_use_radius": False,
+    "phonetic_speech": True,
+    "callsign_style": "airline",
     "install_sentences": False,
 }
 

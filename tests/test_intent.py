@@ -39,12 +39,39 @@ def test_build_speech_with_route() -> None:
         airline="Delta Air Lines",
         aircraft_type="B738",
     )
-    speech = build_speech(_aircraft(), route)
+    speech = build_speech(_aircraft(), route, phonetic=False)
 
     assert speech.startswith("DAL100")
     assert "4 miles to the north-east" in speech
     assert "from ATL to JFK" in speech
     assert "Delta Air Lines" in speech
+
+
+def test_build_speech_phonetic_airline_style() -> None:
+    route = RouteInfo(
+        ident="DAL100",
+        origin="ATL",
+        destination="JFK",
+        airline="Delta Air Lines",
+    )
+    speech = build_speech(_aircraft(), route, phonetic=True, callsign_style="airline")
+
+    assert speech.startswith("Delta Air Lines one zero zero")
+
+
+def test_build_speech_phonetic_spells_when_no_airline() -> None:
+    speech = build_speech(_aircraft(), None, phonetic=True, callsign_style="airline")
+
+    assert speech.startswith("Delta Alpha Lima one zero zero")
+
+
+def test_build_speech_phonetic_spell_every_character() -> None:
+    route = RouteInfo(airline="Delta Air Lines")
+    speech = build_speech(
+        _aircraft(), route, phonetic=True, callsign_style="phonetic"
+    )
+
+    assert speech.startswith("Delta Alpha Lima one zero zero")
 
 
 def test_build_speech_uses_city_names_when_available() -> None:
@@ -71,7 +98,7 @@ def test_build_speech_without_route_uses_altitude() -> None:
 
 def test_build_speech_without_aircraft_details() -> None:
     speech = build_speech(Aircraft(hex="abc123"), None)
-    assert speech == "ABC123."
+    assert speech == "Alpha Bravo Charlie one two three."
 
 
 async def test_intent_without_traffic(hass) -> None:
@@ -88,7 +115,11 @@ async def test_intent_without_traffic(hass) -> None:
 
 async def test_intent_returns_nearest(hass) -> None:
     hass.data[DOMAIN] = {
-        "coordinator": SimpleNamespace(data=PiAwareData(nearest=_aircraft())),
+        "coordinator": SimpleNamespace(
+            data=PiAwareData(nearest=_aircraft()),
+            phonetic_speech=False,
+            callsign_style="airline",
+        ),
         "enrichment": None,
     }
     intent_obj = SimpleNamespace(hass=hass, language="en")
@@ -98,8 +129,25 @@ async def test_intent_returns_nearest(hass) -> None:
     assert "DAL100" in response.speech["plain"]["speech"]
 
 
+async def test_intent_phonetic_speech(hass) -> None:
+    hass.data[DOMAIN] = {
+        "coordinator": SimpleNamespace(
+            data=PiAwareData(nearest=_aircraft()),
+            phonetic_speech=True,
+            callsign_style="airline",
+        ),
+        "enrichment": None,
+    }
+
+    response = await WhatPlaneIntent().async_handle(
+        SimpleNamespace(hass=hass, language="en")
+    )
+
+    assert "Delta Alpha Lima one zero zero" in response.speech["plain"]["speech"]
+
+
 def test_build_recent_speech() -> None:
-    speech = build_recent_speech(_aircraft(), None, 5.0, 120)
+    speech = build_recent_speech(_aircraft(), None, 5.0, 120, phonetic=False)
 
     assert speech.startswith("No aircraft within 5 miles.")
     assert "DAL100" in speech
@@ -107,8 +155,17 @@ def test_build_recent_speech() -> None:
 
 
 def test_build_speech_includes_registration() -> None:
-    speech = build_speech(_aircraft(), None, AircraftMeta(registration="N123NW"))
+    speech = build_speech(
+        _aircraft(), None, AircraftMeta(registration="N123NW"), phonetic=False
+    )
     assert "registration number N123NW" in speech
+
+
+def test_build_speech_phonetic_registration() -> None:
+    speech = build_speech(
+        _aircraft(), None, AircraftMeta(registration="N123NW"), phonetic=True
+    )
+    assert "registration number November one two three November Whiskey" in speech
 
 
 def test_build_speech_skips_registration_matching_callsign() -> None:
@@ -147,7 +204,7 @@ def test_build_speech_prefers_descriptive_type_over_route_code() -> None:
 
 def test_build_recent_speech_includes_registration() -> None:
     speech = build_recent_speech(
-        _aircraft(), None, 5.0, 30, AircraftMeta(registration="N123NW")
+        _aircraft(), None, 5.0, 30, AircraftMeta(registration="N123NW"), phonetic=False
     )
     assert "No aircraft within 5 miles" in speech
     assert "registration number N123NW" in speech
@@ -162,7 +219,11 @@ class _FakeDb:
 
 async def test_intent_includes_registration_and_type(hass) -> None:
     hass.data[DOMAIN] = {
-        "coordinator": SimpleNamespace(data=PiAwareData(nearest=_aircraft())),
+        "coordinator": SimpleNamespace(
+            data=PiAwareData(nearest=_aircraft()),
+            phonetic_speech=False,
+            callsign_style="airline",
+        ),
         "enrichment": None,
         "tar1090_db": _FakeDb(),
     }
@@ -191,6 +252,8 @@ async def test_intent_reports_recent_when_nothing_in_radius(hass) -> None:
         data=PiAwareData(nearest=None),
         nearest_use_radius=True,
         notification_radius_miles=5.0,
+        phonetic_speech=False,
+        callsign_style="airline",
         last_in_range=(_aircraft(), when),
     )
     hass.data[DOMAIN] = {"coordinator": coordinator, "enrichment": None}

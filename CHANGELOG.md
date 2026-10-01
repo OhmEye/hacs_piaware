@@ -3,6 +3,21 @@
 All notable changes to this project are documented here. Versions match
 `custom_components/piaware_adsb/manifest.json` and the GitHub release tags.
 
+## [0.8.0] - 2026-10-01
+
+### Added
+- Aviation phonetic speech: idents and registrations are spoken with the ICAO/NATO alphabet and
+  digit words (`N704CT` → "November seven zero four Charlie Tango", `9` → "niner"), for both voice
+  responses and overhead notifications.
+- New options: **Spell idents and registrations using aviation phonetics** (default on) and
+  **Callsign pronunciation** (`airline` name + digits when known, else spell — default — or
+  `phonetic` to always spell).
+- The overhead event now carries `callsign_spoken`, `registration`, and `registration_spoken`
+  (additive); the blueprint speaks the phonetic forms and the registration.
+
+### Note
+- Sensor states and the Activity/logbook entries remain raw.
+
 ## [0.7.0] - 2026-10-01
 
 ### Added
