@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 from aiohttp import ClientError
@@ -98,6 +98,8 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
         self._enrichment = enrichment
         self._was_overhead = False
         self._callsign_cache = CallsignCache(CALLSIGN_CACHE_TTL)
+        # Most recent aircraft seen within the notification radius and when.
+        self.last_in_range: tuple[Aircraft, datetime] | None = None
 
     @property
     def url(self) -> str:
@@ -118,6 +120,8 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
         )
         self._callsign_cache.apply(aircraft, dt_util.utcnow())
         in_range = nearest_aircraft(aircraft, within_miles=self.notification_radius_miles)
+        if in_range is not None:
+            self.last_in_range = (in_range, dt_util.utcnow())
         positioned_count = sum(1 for a in aircraft if a.has_position)
         in_range_count = sum(
             1

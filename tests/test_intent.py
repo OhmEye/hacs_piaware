@@ -2,13 +2,21 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from types import SimpleNamespace
+
+from homeassistant.util import dt as dt_util
 
 from custom_components.piaware_adsb.aircraft import Aircraft
 from custom_components.piaware_adsb.const import DOMAIN
 from custom_components.piaware_adsb.coordinator import PiAwareData
 from custom_components.piaware_adsb.enrichment import RouteInfo
-from custom_components.piaware_adsb.intent import WhatPlaneIntent, build_speech
+from custom_components.piaware_adsb.intent import (
+    WhatPlaneIntent,
+    _humanize_age,
+    build_recent_speech,
+    build_speech,
+)
 
 
 def _aircraft() -> Aircraft:
@@ -72,3 +80,57 @@ async def test_intent_returns_nearest(hass) -> None:
     response = await WhatPlaneIntent().async_handle(intent_obj)
 
     assert "DAL100" in response.speech["plain"]["speech"]
+
+
+def test_build_recent_speech() -> None:
+    speech = build_recent_speech(_aircraft(), None, 5.0, 120)
+
+    assert speech.startswith("No aircraft within 5 miles.")
+    assert "DAL100" in speech
+    assert "2 minutes ago" in speech
+
+
+def test_humanize_age() -> None:
+    assert _humanize_age(3) == "just now"
+    assert _humanize_age(30) == "30 seconds ago"
+    assert _humanize_age(60) == "1 minute ago"
+    assert _humanize_age(120) == "2 minutes ago"
+    assert _humanize_age(7200) == "2 hours ago"
+    assert _humanize_age(90000) == "1 day ago"
+
+
+async def test_intent_reports_recent_when_nothing_in_radius(hass) -> None:
+    when = dt_util.utcnow() - timedelta(minutes=2)
+    coordinator = SimpleNamespace(
+        data=PiAwareData(nearest=None),
+        nearest_use_radius=True,
+        notification_radius_miles=5.0,
+        last_in_range=(_aircraft(), when),
+    )
+    hass.data[DOMAIN] = {"coordinator": coordinator, "enrichment": None}
+
+    response = await WhatPlaneIntent().async_handle(
+        SimpleNamespace(hass=hass, language="en")
+    )
+    speech = response.speech["plain"]["speech"]
+
+    assert "No aircraft within 5 miles" in speech
+    assert "DAL100" in speech
+    assert "2 minutes ago" in speech
+
+
+async def test_intent_ignores_recent_cache_without_radius(hass) -> None:
+    when = dt_util.utcnow() - timedelta(minutes=2)
+    coordinator = SimpleNamespace(
+        data=PiAwareData(nearest=None),
+        nearest_use_radius=False,
+        notification_radius_miles=5.0,
+        last_in_range=(_aircraft(), when),
+    )
+    hass.data[DOMAIN] = {"coordinator": coordinator, "enrichment": None}
+
+    response = await WhatPlaneIntent().async_handle(
+        SimpleNamespace(hass=hass, language="en")
+    )
+
+    assert "don't see any aircraft" in response.speech["plain"]["speech"]

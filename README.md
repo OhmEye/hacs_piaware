@@ -76,6 +76,12 @@ once** after the first install. Then expose an Assist satellite or use the Assis
 The default Home Assistant conversation agent handles the intent; LLM-based agents would need
 additional tool calling.
 
+With **Only report the nearest aircraft within the notification radius** enabled and a small radius,
+an aircraft can leave the radius between polls. In that case the assistant says no aircraft is
+within the radius and describes the most recent aircraft that was in range, including how long ago
+(e.g. *"No aircraft within 2 miles. The most recent was DAL100, a 737, 1.4 miles to the
+north-east, 40 seconds ago."*).
+
 ## Overhead notifications
 
 1. Enable **Enable overhead notifications** in the integration options and set the radius.

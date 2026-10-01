@@ -80,6 +80,9 @@ async def test_setup_creates_entities(
     in_range = hass.states.get("sensor.piaware_ads_b_aircraft_in_range")
     assert in_range.state == "4"
 
+    # The most recent in-radius aircraft is remembered for the voice fallback.
+    assert hass.data[DOMAIN]["coordinator"].last_in_range is not None
+
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
