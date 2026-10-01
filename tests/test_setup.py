@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from copy import deepcopy
+from pathlib import Path
 
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -82,6 +83,12 @@ async def test_setup_creates_entities(
 
     # The most recent in-radius aircraft is remembered for the voice fallback.
     assert hass.data[DOMAIN]["coordinator"].last_in_range is not None
+
+    # The overhead notification blueprint is installed into the config dir.
+    blueprint = Path(
+        hass.config.path("blueprints/automation/piaware_adsb/overhead_notify.yaml")
+    )
+    assert blueprint.is_file()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

@@ -3,6 +3,23 @@
 All notable changes to this project are documented here. Versions match
 `custom_components/piaware_adsb/manifest.json` and the GitHub release tags.
 
+## [0.7.0] - 2026-10-01
+
+### Added
+- The overhead notification blueprint now lets you choose which **Assist satellites** announce the
+  aircraft (entity selector filtered to `assist_satellite`, one or many), plus an optional
+  notification action (use `{{ message }}` for the generated text).
+- The blueprint is now bundled with the integration and installed to
+  `config/blueprints/automation/piaware_adsb/` at setup (HACS does not install blueprints).
+
+### Changed
+- Blueprint action inputs are injected correctly (`sequence: !input`) and the invalid `title` key
+  is no longer forced onto voice actions, so `assist_satellite.announce` works.
+
+### Removed
+- The repo-root `blueprints/` duplicate; the bundled copy under `custom_components/piaware_adsb/`
+  is now the single source of truth.
+
 ## [0.6.0] - 2026-10-01
 
 ### Added

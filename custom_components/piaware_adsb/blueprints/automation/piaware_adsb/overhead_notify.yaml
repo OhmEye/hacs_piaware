@@ -1,0 +1,85 @@
+blueprint:
+  name: PiAware ADS-B - aircraft overhead notification
+  description: >
+    Announce an aircraft when it enters the configured overhead radius on the
+    selected Assist satellites, and/or run a custom notification action. The
+    integration must have "Enable overhead notifications" turned on. Enable
+    "Use the FlightAware API for overhead notifications" to include the route.
+  domain: automation
+  source_url: https://github.com/OhmEye/hacs_piaware/blob/main/custom_components/piaware_adsb/blueprints/automation/piaware_adsb/overhead_notify.yaml
+  input:
+    assist_satellites:
+      name: Assist satellites to announce on
+      description: >
+        The voice assistants that should speak the message. Leave empty to
+        announce nowhere.
+      default: []
+      selector:
+        entity:
+          multiple: true
+          filter:
+            - domain: assist_satellite
+    notify_action:
+      name: Additional notification action (optional)
+      description: >
+        Optional extra action, for example a mobile app notification. Use
+        "{{ message }}" to include the generated text.
+      default: []
+      selector:
+        action:
+    altitude_filter:
+      name: Minimum altitude (feet)
+      description: Only notify for aircraft at or above this altitude.
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 50000
+          step: 100
+          unit_of_measurement: ft
+
+mode: single
+max_exceeded: silent
+
+triggers:
+  - trigger: event
+    event_type: piaware_adsb_aircraft_overhead
+
+variables:
+  satellite_entities: !input assist_satellites
+  push_actions: !input notify_action
+  min_altitude: !input altitude_filter
+  message: >-
+    {{ trigger.event.data.callsign or trigger.event.data.hex | upper }}
+    ({{ trigger.event.data.type_code or 'unknown type' }}) is
+    {{ trigger.event.data.distance_miles | round(1) }} miles
+    {{ trigger.event.data.compass or 'nearby' }}
+    {%- if trigger.event.data.altitude_ft %} at {{ trigger.event.data.altitude_ft }} feet{% endif %}
+    {%- set origin = trigger.event.data.origin_name or trigger.event.data.origin %}
+    {%- set destination = trigger.event.data.destination_name or trigger.event.data.destination %}
+    {%- if origin and destination %}, flying {{ origin }} to {{ destination }}
+    {%- if trigger.event.data.airline %} on {{ trigger.event.data.airline }}{% endif %}{% endif %}.
+
+actions:
+  - alias: Filter by minimum altitude
+    condition: template
+    value_template: >-
+      {{ trigger.event.data.altitude_ft is none
+         or trigger.event.data.altitude_ft >= min_altitude }}
+  - alias: Announce on voice assistants
+    choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ satellite_entities | count > 0 }}"
+        sequence:
+          - action: assist_satellite.announce
+            target:
+              entity_id: !input assist_satellites
+            data:
+              message: "{{ message }}"
+  - alias: Additional notification action
+    choose:
+      - conditions:
+          - condition: template
+            value_template: "{{ push_actions | count > 0 }}"
+        sequence: !input notify_action

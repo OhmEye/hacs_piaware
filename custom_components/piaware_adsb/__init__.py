@@ -9,6 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import (
+    BLUEPRINT_FILE,
     CONF_API_KEY,
     CONF_COUNT_USE_RADIUS,
     CONF_ENRICH_NOTIFICATIONS,
@@ -82,6 +83,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if config.get(CONF_INSTALL_SENTENCES, DEFAULT_INSTALL_SENTENCES):
         await _async_install_sentences(hass)
 
+    await _async_install_blueprint(hass)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_options))
     return True
@@ -103,21 +106,14 @@ async def _async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def _async_install_sentences(hass: HomeAssistant) -> None:
-    """Copy the bundled custom sentences into the HA config directory."""
-    source = (
-        Path(__file__).parent
-        / "custom_sentences"
-        / "en"
-        / CUSTOM_SENTENCE_FILE
-    )
-    target = Path(hass.config.path("custom_sentences", "en", CUSTOM_SENTENCE_FILE))
+async def _async_copy_bundled(hass: HomeAssistant, source: Path, target: Path) -> bool:
+    """Copy a bundled file into the HA config directory, skipping if unchanged."""
 
     def _copy() -> bool:
         try:
             content = source.read_text(encoding="utf-8")
         except OSError as err:
-            _LOGGER.warning("Bundled sentences unavailable: %s", err)
+            _LOGGER.warning("Bundled file unavailable (%s): %s", source, err)
             return False
         try:
             if target.exists() and target.read_text(encoding="utf-8") == content:
@@ -125,13 +121,38 @@ async def _async_install_sentences(hass: HomeAssistant) -> None:
             target.parent.mkdir(parents=True, exist_ok=True)
             target.write_text(content, encoding="utf-8")
         except OSError as err:
-            _LOGGER.warning("Could not install custom sentences: %s", err)
+            _LOGGER.warning("Could not install %s: %s", target, err)
             return False
         return True
 
-    if await hass.async_add_executor_job(_copy):
+    return await hass.async_add_executor_job(_copy)
+
+
+async def _async_install_sentences(hass: HomeAssistant) -> None:
+    """Copy the bundled custom sentences into the HA config directory."""
+    source = Path(__file__).parent / "custom_sentences" / "en" / CUSTOM_SENTENCE_FILE
+    target = Path(hass.config.path("custom_sentences", "en", CUSTOM_SENTENCE_FILE))
+
+    if await _async_copy_bundled(hass, source, target):
         _LOGGER.warning(
             "Installed custom Assist sentences to %s. Restart Home Assistant "
             "for the new sentences to take effect.",
             target,
         )
+
+
+async def _async_install_blueprint(hass: HomeAssistant) -> None:
+    """Copy the bundled overhead notification blueprint into the config dir."""
+    source = (
+        Path(__file__).parent
+        / "blueprints"
+        / "automation"
+        / "piaware_adsb"
+        / BLUEPRINT_FILE
+    )
+    target = Path(
+        hass.config.path("blueprints", "automation", "piaware_adsb", BLUEPRINT_FILE)
+    )
+
+    if await _async_copy_bundled(hass, source, target):
+        _LOGGER.info("Installed the overhead notification blueprint to %s", target)

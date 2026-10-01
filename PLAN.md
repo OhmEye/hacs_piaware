@@ -78,7 +78,13 @@ tar1090 aircraft.json ──(aiohttp poll / DataUpdateCoordinator)──▶ [PiA
    setup and logs that a restart is required.
 9. **Applying an update needs a full HA restart** (custom-integration Python is cached in
    `sys.modules`); HACS can *notice* updates after reloading its config entry.
-10. **Registration and type are local too**: the feed has neither, but tar1090 serves its metadata
+10. **Blueprint delivery**: HACS installs only `custom_components/<domain>`, so the overhead
+    notification blueprint is bundled in the component and copied to
+    `config/blueprints/automation/piaware_adsb/` at setup (always). The blueprint lets you pick
+    which **Assist satellites** announce (entity selector, `domain: assist_satellite`) and keeps an
+    optional action input; blueprints inject actions via `sequence: !input` (not `action: !input`
+    + `data:`), and entity services reject extra keys like `title`.
+11. **Registration and type are local too**: the feed has neither, but tar1090 serves its metadata
     DB under `<root>/<databaseFolder>/<prefix>.js` (folder discovered from `index.html`). Each entry
     is `[registration, type_code, flags, long_name]`. `registration.py` follows that trie, so the
     voice response can say `registration number <reg>` and `a/an <long_name>` without an external
@@ -94,7 +100,7 @@ custom_components/piaware_adsb/
   binary_sensor.py
   strings.json + translations/en.json
   custom_sentences/en/what_plane.yaml
-blueprints/automation/piaware_adsb/overhead_notify.yaml
+  blueprints/automation/piaware_adsb/overhead_notify.yaml   (bundled, installed at setup)
 tests/  hacs.json  pyproject.toml  README.md  PLAN.md  CHANGELOG.md  AGENTS.md  LICENSE
 .github/workflows/  tests.yml  hassfest.yml  hacs.yml
 ```

@@ -26,6 +26,12 @@ def aircraft_payload() -> dict:
     return json.loads((FIXTURES / "aircraft.json").read_text(encoding="utf-8"))
 
 
+@pytest.fixture
+def hass_config_dir(hass_tmp_config_dir: str) -> str:
+    """Use a writable per-test config dir (the integration copies files into it)."""
+    return hass_tmp_config_dir
+
+
 @pytest.fixture(autouse=True)
 def auto_enable_custom_integrations(enable_custom_integrations):
     """Enable loading custom integrations in all tests."""

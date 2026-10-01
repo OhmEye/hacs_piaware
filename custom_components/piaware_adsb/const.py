@@ -47,6 +47,7 @@ HEXDB_URL: Final = "https://hexdb.io/api/v1/aircraft"
 # Assist intent
 INTENT_WHAT_PLANE: Final = "PiawareWhatPlane"
 CUSTOM_SENTENCE_FILE: Final = "what_plane.yaml"
+BLUEPRINT_FILE: Final = "overhead_notify.yaml"
 
 # Events / signals
 EVENT_AIRCRAFT_OVERHEAD: Final = f"{DOMAIN}_aircraft_overhead"

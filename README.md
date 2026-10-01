@@ -92,10 +92,15 @@ north-east, 40 seconds ago."*).
 1. Enable **Enable overhead notifications** in the integration options and set the radius.
 2. Optionally enable **Use the FlightAware API for overhead notifications** to include the route
    (requires an AeroAPI key; lookups are cached and happen once per overhead aircraft).
-3. Create an automation from the blueprint **PiAware ADS-B - aircraft overhead notification**.
-4. The event `piaware_adsb_aircraft_overhead` carries `hex`, `callsign`, `type_code`,
+3. The integration installs the blueprint **PiAware ADS-B - aircraft overhead notification** into
+   `config/blueprints/automation/piaware_adsb/` at setup (restart once after installing so it
+   appears). Create an automation from it.
+4. In the blueprint, choose **Assist satellites to announce on** — the voice assistants that
+   should speak the message (pick one or several). The optional **notification action** can send a
+   push notification; use `{{ message }}` for the generated text.
+5. The event `piaware_adsb_aircraft_overhead` carries `hex`, `callsign`, `type_code`,
    `altitude_ft`, `distance_miles`, `compass`, `squawk`, and — when API enrichment is on —
-   `origin`, `destination`, `airline` and `enriched`.
+   `origin`, `destination`, `origin_name`, `destination_name`, `airline` and `enriched`.
 
 ## Entities
 

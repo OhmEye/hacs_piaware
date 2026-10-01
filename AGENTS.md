@@ -70,6 +70,11 @@ $env:PYTHONPATH = "tools\win_test_shims"   # fcntl/resource shims
 - Reference coordinates come from `hass.config.latitude/longitude`.
 - Custom Assist sentences are copied to `config/custom_sentences/en/` at setup; a HA **restart** is
   required for them (and for any custom-integration code update) to take effect.
+- The overhead notification blueprint is **bundled** at
+  `custom_components/piaware_adsb/blueprints/automation/piaware_adsb/overhead_notify.yaml` and
+  always copied to `config/blueprints/automation/piaware_adsb/` at setup (HACS does not install
+  blueprints). It uses an entity selector (`domain: assist_satellite`) to choose which voice
+  assistants announce; blueprints inject action inputs with `sequence: !input`.
 
 ## Release process
 
