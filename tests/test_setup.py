@@ -221,6 +221,34 @@ async def test_overhead_event_fires(
     assert aioclient_mock.call_count == 1
 
 
+async def test_overhead_event_uses_local_type(
+    hass: HomeAssistant, aioclient_mock, aircraft_payload: dict
+) -> None:
+    aioclient_mock.get(FEED_URL, json=aircraft_payload)
+    aioclient_mock.get(
+        "http://piaware.lan:80/tar1090/index.html",
+        text='<script>let databaseFolder = "db-test";</script>',
+    )
+    aioclient_mock.get(
+        "http://piaware.lan:80/tar1090/db-test/D.js",
+        json={"EAD01": ["N12345", "B738", "00", "BOEING 737-800"]},
+    )
+    hass.config.latitude = 43.0
+    hass.config.longitude = -76.0
+
+    events: list = []
+    hass.bus.async_listen(EVENT_AIRCRAFT_OVERHEAD, events.append)
+
+    entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_DATA)
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert events[0].data["type_name"] == "BOEING 737-800"
+    assert events[0].data["registration"] == "N12345"
+    assert events[0].data["registration_spoken"] == "November one two three four five"
+
+
 async def test_overhead_event_enriched_when_enabled(
     hass: HomeAssistant, aioclient_mock, aircraft_payload: dict
 ) -> None:

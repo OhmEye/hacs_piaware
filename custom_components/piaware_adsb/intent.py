@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent as intent_helper
 from homeassistant.util import dt as dt_util
 
-from .aircraft import Aircraft
+from .aircraft import Aircraft, select_type_name
 from .const import DOMAIN, INTENT_WHAT_PLANE
 from .enrichment import EnrichmentClient, RouteInfo
 from .phonetics import spell, spoken_callsign, spoken_registration
@@ -51,26 +51,6 @@ def _recent_in_range(coordinator) -> tuple[Aircraft, datetime] | None:
     return recent
 
 
-def _select_type_name(
-    route: RouteInfo | None,
-    meta: AircraftMeta | None,
-    aircraft: Aircraft,
-) -> str | None:
-    """Pick the friendliest available aircraft type description."""
-    candidates = [
-        route.aircraft_type if route else None,
-        meta.type_name if meta else None,
-        meta.type_code if meta else None,
-        aircraft.type_code,
-    ]
-    present = [c for c in candidates if c]
-    for candidate in present:
-        # Prefer a descriptive name (e.g. "Boeing 737-800") over a bare ICAO code.
-        if " " in candidate or any(ch.islower() for ch in candidate):
-            return candidate
-    return present[0] if present else None
-
-
 def _spoken_name(
     aircraft: Aircraft, route: RouteInfo | None, phonetic: bool, style: str
 ) -> str:
@@ -102,7 +82,7 @@ def _describe(
         spoken_reg = spoken_registration(registration) if phonetic else registration
         parts.append(f"registration number {spoken_reg}")
 
-    type_name = _select_type_name(route, meta, aircraft)
+    type_name = select_type_name(route, meta, aircraft)
     if type_name:
         article = "an" if type_name[:1].upper() in "AEIOU" else "a"
         parts.append(f"{article} {type_name}")

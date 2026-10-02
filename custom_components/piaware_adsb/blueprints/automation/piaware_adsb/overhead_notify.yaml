@@ -49,17 +49,23 @@ variables:
   satellite_entities: !input assist_satellites
   push_actions: !input notify_action
   min_altitude: !input altitude_filter
+  origin: "{{ trigger.event.data.origin_name or trigger.event.data.origin }}"
+  destination: "{{ trigger.event.data.destination_name or trigger.event.data.destination }}"
+  type_label: >-
+    {%- set t = trigger.event.data.type_name or trigger.event.data.type_code -%}
+    {%- if t -%}
+    {{ ('an' if t[0] | upper in 'AEIOU' else 'a') ~ ' ' ~ t }}
+    {%- else -%}
+    an unknown type
+    {%- endif -%}
   message: >-
     {{ trigger.event.data.callsign_spoken or trigger.event.data.callsign
        or trigger.event.data.hex | upper }}
     {%- if trigger.event.data.registration_spoken %}, registration number
-    {{ trigger.event.data.registration_spoken }}{% endif %}
-    ({{ trigger.event.data.type_code or 'unknown type' }}) is
-    {{ trigger.event.data.distance_miles | round(1) }} miles
-    {{ trigger.event.data.compass or 'nearby' }}
+    {{ trigger.event.data.registration_spoken }}{% endif %}, {{ type_label }},
+    {{ trigger.event.data.distance_miles | round }} miles to the
+    {{ trigger.event.data.compass or 'north' }}
     {%- if trigger.event.data.altitude_ft %} at {{ trigger.event.data.altitude_ft }} feet{% endif %}
-    {%- set origin = trigger.event.data.origin_name or trigger.event.data.origin %}
-    {%- set destination = trigger.event.data.destination_name or trigger.event.data.destination %}
     {%- if origin and destination %}, flying {{ origin }} to {{ destination }}
     {%- if trigger.event.data.airline %} on {{ trigger.event.data.airline }}{% endif %}{% endif %}.
 

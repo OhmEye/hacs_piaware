@@ -14,7 +14,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .aircraft import Aircraft, nearest_aircraft, parse_aircraft_payload
+from .aircraft import (
+    Aircraft,
+    nearest_aircraft,
+    parse_aircraft_payload,
+    select_type_name,
+)
 from .callsign import CallsignCache
 from .const import (
     CALLSIGN_CACHE_TTL,
@@ -163,6 +168,7 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
                 "hex": target.hex,
                 "callsign": target.callsign,
                 "type_code": target.type_code,
+                "type_name": None,
                 "altitude_ft": target.altitude_ft,
                 "distance_miles": target.distance_miles,
                 "compass": target.compass,
@@ -175,6 +181,7 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
                 "enriched": False,
             }
 
+            route = None
             if (
                 self.enrich_notifications
                 and self._enrichment is not None
@@ -192,6 +199,13 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
                     event_data["type_code"] = route.aircraft_type
                 event_data["enriched"] = route.has_route
 
+            meta = None
+            if self._tar1090_db is not None:
+                try:
+                    meta = await self._tar1090_db.async_get_metadata(target.hex)
+                except Exception:  # noqa: BLE001 - optional enrichment
+                    _LOGGER.debug("tar1090 lookup failed for %s", target.hex)
+
             raw_callsign = target.callsign or target.hex.upper()
             if self.phonetic_speech:
                 event_data["callsign_spoken"] = (
@@ -203,17 +217,15 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
             else:
                 event_data["callsign_spoken"] = raw_callsign
 
-            registration = None
-            if self._tar1090_db is not None:
-                try:
-                    meta = await self._tar1090_db.async_get_metadata(target.hex)
-                    registration = meta.registration if meta else None
-                except Exception:  # noqa: BLE001 - optional enrichment
-                    _LOGGER.debug("Registration lookup failed for %s", target.hex)
+            registration = meta.registration if meta else None
             event_data["registration"] = registration
             event_data["registration_spoken"] = (
                 spoken_registration(registration) if self.phonetic_speech else registration
             )
+
+            event_data["type_name"] = select_type_name(route, meta, target)
+            if not event_data["type_code"] and meta and meta.type_code:
+                event_data["type_code"] = meta.type_code
 
             self.hass.bus.async_fire(EVENT_AIRCRAFT_OVERHEAD, event_data)
             async_dispatcher_send(self.hass, SIGNAL_AIRCRAFT_OVERHEAD, target)

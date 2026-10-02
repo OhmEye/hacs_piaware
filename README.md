@@ -117,9 +117,13 @@ north-east, 40 seconds ago."*).
 4. In the blueprint, choose **Assist satellites to announce on** — the voice assistants that
    should speak the message (pick one or several). The optional **notification action** can send a
    push notification; use `{{ message }}` for the generated text.
-5. The event `piaware_adsb_aircraft_overhead` carries `hex`, `callsign`, `type_code`,
-   `altitude_ft`, `distance_miles`, `compass`, `squawk`, and — when API enrichment is on —
-   `origin`, `destination`, `origin_name`, `destination_name`, `airline` and `enriched`.
+5. The event `piaware_adsb_aircraft_overhead` carries `hex`, `callsign`, `callsign_spoken`,
+   `type_code`, `type_name`, `registration`, `registration_spoken`, `altitude_ft`,
+   `distance_miles`, `compass`, `squawk`, and — when API enrichment is on — `origin`,
+   `destination`, `origin_name`, `destination_name`, `airline` and `enriched`.
+   The aircraft type comes from the receiver's tar1090 database, so notifications name it even
+   without an API key, and the message reads conversationally (e.g. *"…, a Boeing 737-800, 2 miles
+   to the north-east …"*).
 
 ## Entities
 

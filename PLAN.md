@@ -89,7 +89,10 @@ tar1090 aircraft.json ──(aiohttp poll / DataUpdateCoordinator)──▶ [PiA
     (default on) and `callsign_style` (`airline` = name + digits when known else spell; `phonetic` =
     always spell). Applied to the voice intent and the overhead event (`callsign_spoken` /
     `registration_spoken`); sensor states and Activity stay raw. No SSML dependency.
-12. **Registration and type are local too**: the feed has neither, but tar1090 serves its metadata
+12. **Notification type** uses the same local-DB selection as the voice intent (`select_type_name`
+    in `aircraft.py`), so overhead notifications name the type without an API key; the event carries
+    `type_name` (+ DB `type_code` fallback) and the blueprint speaks it conversationally.
+13. **Registration and type are local too**: the feed has neither, but tar1090 serves its metadata
     DB under `<root>/<databaseFolder>/<prefix>.js` (folder discovered from `index.html`). Each entry
     is `[registration, type_code, flags, long_name]`. `registration.py` follows that trie, so the
     voice response can say `registration number <reg>` and `a/an <long_name>` without an external

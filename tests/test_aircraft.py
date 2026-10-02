@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 from custom_components.piaware_adsb.aircraft import (
+    Aircraft,
     nearest_aircraft,
     parse_aircraft_payload,
+    select_type_name,
 )
+from custom_components.piaware_adsb.enrichment import RouteInfo
+from custom_components.piaware_adsb.registration import AircraftMeta
 
 HOME_LAT = 43.0
 HOME_LON = -76.0
@@ -59,3 +63,21 @@ def test_nearest_aircraft_within_radius(aircraft_payload: dict) -> None:
 
 def test_nearest_returns_none_when_empty() -> None:
     assert nearest_aircraft([]) is None
+
+
+def test_select_type_name_prefers_descriptive() -> None:
+    route = RouteInfo(aircraft_type="B738")
+    meta = AircraftMeta(type_name="Boeing 737-800")
+    assert select_type_name(route, meta, Aircraft(hex="abc123")) == "Boeing 737-800"
+
+
+def test_select_type_name_falls_back_to_code() -> None:
+    assert (
+        select_type_name(None, AircraftMeta(type_code="A320"), Aircraft(hex="abc123"))
+        == "A320"
+    )
+    assert select_type_name(None, None, Aircraft(hex="abc123", type_code="C172")) == "C172"
+
+
+def test_select_type_name_none_when_unknown() -> None:
+    assert select_type_name(None, None, Aircraft(hex="abc123")) is None

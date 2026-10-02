@@ -3,6 +3,14 @@
 All notable changes to this project are documented here. Versions match
 `custom_components/piaware_adsb/manifest.json` and the GitHub release tags.
 
+## [0.8.1] - 2026-10-01
+
+### Fixed
+- Overhead notifications no longer say "unknown type". The event now takes the aircraft type from
+  the receiver's tar1090 database (via the shared `select_type_name`, same as the voice response),
+  adding `type_name` to the event and falling back to the DB type code; the blueprint speaks it
+  conversationally.
+
 ## [0.8.0] - 2026-10-01
 
 ### Added

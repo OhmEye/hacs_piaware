@@ -64,6 +64,9 @@ $env:PYTHONPATH = "tools\win_test_shims"   # fcntl/resource shims
   voice phrase is `registration number <reg>` (skipped when it equals the callsign/hex) and the
   type is spoken as `a/an <long_name>` when available, falling back to the ICAO type code.
   Note: `code`/`name` are absent (or `00`) for some aircraft — always handle empty metadata.
+- The overhead event uses the same type selection (`aircraft.select_type_name`) as the voice intent,
+  so notifications name the type from the DB (not only from the feed/API). The event carries
+  `type_name` (friendly) and falls back `type_code` from the DB.
 - **Phonetics**: `phonetics.py` (`spell`, `spoken_callsign`, `spoken_registration`) converts idents
   and registrations to ICAO/NATO phonetics for speech (voice responses + overhead notifications).
   Gated by `phonetic_speech` (default on) and `callsign_style` (`airline` name+digits when known,

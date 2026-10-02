@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .geo import bearing_degrees, compass_point, distance_miles
+
+if TYPE_CHECKING:
+    from .enrichment import RouteInfo
+    from .registration import AircraftMeta
 
 
 @dataclass(slots=True)
@@ -117,3 +121,26 @@ def nearest_aircraft(
     if not candidates:
         return None
     return min(candidates, key=lambda a: a.distance_miles)  # type: ignore[arg-type,return-value]
+
+
+def select_type_name(
+    route: RouteInfo | None,
+    meta: AircraftMeta | None,
+    aircraft: Aircraft,
+) -> str | None:
+    """Pick the friendliest available aircraft type description.
+
+    Prefers a descriptive value (e.g. "Boeing 737-800") over a bare ICAO code,
+    from the route enrichment, the local tar1090 database, or the feed.
+    """
+    candidates = [
+        route.aircraft_type if route else None,
+        meta.type_name if meta else None,
+        meta.type_code if meta else None,
+        aircraft.type_code,
+    ]
+    present = [c for c in candidates if c]
+    for candidate in present:
+        if " " in candidate or any(ch.islower() for ch in candidate):
+            return candidate
+    return present[0] if present else None
