@@ -3,6 +3,17 @@
 All notable changes to this project are documented here. Versions match
 `custom_components/piaware_adsb/manifest.json` and the GitHub release tags.
 
+## [0.9.0] - 2026-10-02
+
+### Added
+- Separate **Voice command radius** option, so the overhead notification radius and the voice-command
+  radius are now independent. The overhead notification/event and `aircraft_overhead` binary sensor
+  use the **Overhead notification radius**; the `count_use_radius`/`nearest_use_radius` toggles and
+  the "most recent in-range" voice fallback use the **Voice command radius**.
+
+### Changed
+- The radius toggle option labels now reference the voice command radius.
+
 ## [0.8.1] - 2026-10-01
 
 ### Fixed

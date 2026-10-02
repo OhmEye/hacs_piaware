@@ -23,6 +23,7 @@ from .const import (
     CONF_PHONETIC_SPEECH,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
+    CONF_VOICE_RADIUS_MILES,
     CUSTOM_SENTENCE_FILE,
     DEFAULT_CALLSIGN_STYLE,
     DEFAULT_COUNT_USE_RADIUS,
@@ -35,6 +36,7 @@ from .const import (
     DEFAULT_PHONETIC_SPEECH,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_VOICE_RADIUS_MILES,
     DOMAIN,
 )
 from .coordinator import PiAwareCoordinator, build_url
@@ -71,6 +73,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ),
         notification_radius_miles=config.get(
             CONF_NOTIFICATION_RADIUS_MILES, DEFAULT_NOTIFICATION_RADIUS_MILES
+        ),
+        voice_radius_miles=config.get(
+            CONF_VOICE_RADIUS_MILES, DEFAULT_VOICE_RADIUS_MILES
         ),
         enrich_notifications=config.get(
             CONF_ENRICH_NOTIFICATIONS, DEFAULT_ENRICH_NOTIFICATIONS

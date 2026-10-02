@@ -46,7 +46,7 @@ def _recent_in_range(coordinator) -> tuple[Aircraft, datetime] | None:
     if coordinator is None or not getattr(coordinator, "nearest_use_radius", False):
         return None
     recent = getattr(coordinator, "last_in_range", None)
-    if recent is None or getattr(coordinator, "notification_radius_miles", None) is None:
+    if recent is None or getattr(coordinator, "voice_radius_miles", None) is None:
         return None
     return recent
 
@@ -205,7 +205,7 @@ class WhatPlaneIntent(intent_helper.IntentHandler):
                     build_recent_speech(
                         aircraft,
                         route,
-                        coordinator.notification_radius_miles,
+                        coordinator.voice_radius_miles,
                         age,
                         meta,
                         phonetic=phonetic,

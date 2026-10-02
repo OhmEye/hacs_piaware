@@ -23,6 +23,7 @@ from custom_components.piaware_adsb.const import (
     CONF_PHONETIC_SPEECH,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
+    CONF_VOICE_RADIUS_MILES,
     DOMAIN,
     EVENT_AIRCRAFT_OVERHEAD,
 )
@@ -37,6 +38,7 @@ ENTRY_DATA = {
     CONF_SCAN_INTERVAL: 10,
     CONF_NOTIFICATIONS_ENABLED: True,
     CONF_NOTIFICATION_RADIUS_MILES: 5.0,
+    CONF_VOICE_RADIUS_MILES: 5.0,
     CONF_ENRICH_NOTIFICATIONS: False,
     CONF_COUNT_USE_RADIUS: False,
     CONF_NEAREST_USE_RADIUS: False,
@@ -107,7 +109,7 @@ async def test_radius_toggles_restrict_count_and_nearest(
 
     data = {
         **ENTRY_DATA,
-        CONF_NOTIFICATION_RADIUS_MILES: 0.5,
+        CONF_VOICE_RADIUS_MILES: 0.5,
         CONF_COUNT_USE_RADIUS: True,
         CONF_NEAREST_USE_RADIUS: True,
     }
@@ -121,6 +123,10 @@ async def test_radius_toggles_restrict_count_and_nearest(
     assert hass.states.get("sensor.piaware_ads_b_aircraft_in_range").state == "unavailable"
     assert hass.states.get("sensor.piaware_ads_b_nearest_aircraft").state == "unavailable"
     assert hass.states.get("sensor.piaware_ads_b_nearest_aircraft_distance").state == "unavailable"
+    # The notification radius (5.0 mi) is independent of the voice radius (0.5 mi).
+    assert (
+        hass.states.get("binary_sensor.piaware_ads_b_aircraft_overhead").state == "on"
+    )
 
 
 async def test_callsign_retained_when_feed_omits_it(
@@ -162,7 +168,7 @@ async def test_radius_toggles_off_ignore_radius(
 
     data = {
         **ENTRY_DATA,
-        CONF_NOTIFICATION_RADIUS_MILES: 0.5,
+        CONF_VOICE_RADIUS_MILES: 0.5,
         CONF_COUNT_USE_RADIUS: False,
         CONF_NEAREST_USE_RADIUS: False,
     }

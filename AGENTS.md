@@ -51,12 +51,14 @@ $env:PYTHONPATH = "tools\win_test_shims"   # fcntl/resource shims
   `DataUpdateCoordinator` (with a `TypeError` fallback for older HA).
 - **`CallsignCache`** (`callsign.py`, 6 h TTL): the feed's `flight` field is intermittent for the
   same ICAO hex, so reuse the last callsign seen instead of falling back to hex.
-- **Radius toggles** (`count_use_radius`, `nearest_use_radius`, default off) reuse
-  `notification_radius_miles`. When on and nothing is in range, the affected sensors are
-  `unavailable` (not `0`/`unknown`).
-- **Voice fallback:** coordinator keeps `last_in_range = (aircraft, timestamp)`; when
-  `nearest_use_radius` is on and nothing is in range, the intent reports the most recent aircraft
-  and how long ago.
+- **Two independent radii:** `notification_radius_miles` drives the overhead notification/event and
+  the `aircraft_overhead` binary sensor; `voice_radius_miles` drives the voice-command toggles.
+- **Radius toggles** (`count_use_radius`, `nearest_use_radius`, default off) use
+  `voice_radius_miles`. When on and nothing is in range, the affected sensors are `unavailable`
+  (not `0`/`unknown`).
+- **Voice fallback:** coordinator keeps `last_in_range = (aircraft, timestamp)` from the voice
+  radius; when `nearest_use_radius` is on and nothing is in range, the intent reports the most
+  recent aircraft and how long ago.
 - **Metadata** (registration + aircraft type) is looked up from the receiver's own tar1090 database
   (no external API): `registration.py` (`Tar1090Database`) scrapes `databaseFolder` from
   `index.html` and follows the `db-*/<prefix>.js` trie; each entry is

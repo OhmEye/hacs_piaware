@@ -55,19 +55,28 @@ directory and restart.
    (`/tar1090/data/aircraft.json`).
 3. Optionally add a FlightAware AeroAPI key to enable route lookups.
 4. Choose whether to install the Assist sentences, whether to enable overhead notifications,
-   whether overhead notifications should use the FlightAware API (requires a key), and whether the
-   notification radius should also constrain the aircraft count and the nearest aircraft.
+   whether overhead notifications should use the FlightAware API (requires a key), and the radii
+   (below).
+
+### Radii
+
+Two independent radii are available:
+
+- **Overhead notification radius (miles)** — the range that triggers the overhead
+  notification/event and the `aircraft_overhead` binary sensor.
+- **Voice command radius (miles)** — the range used by the voice-command toggles below (nearest
+  aircraft / count).
 
 ### Radius toggles
 
-The notification radius can be reused independently for two other entities:
+The **voice command radius** can be applied independently to two entities:
 
-- **Only count aircraft within the notification radius** — the "Aircraft in range" sensor counts
+- **Only count aircraft within the voice command radius** — the "Aircraft in range" sensor counts
   only aircraft inside the radius. When off (default) it counts every aircraft with a decoded
   position.
-- **Only report the nearest aircraft within the notification radius** — the nearest-aircraft sensor
-  and the "what plane is that" voice intent only consider aircraft inside the radius. When off
-  (default) the absolute nearest aircraft is used regardless of distance.
+- **Only report the nearest aircraft within the voice command radius** — the nearest-aircraft
+  sensor and the "what plane is that" voice intent only consider aircraft inside the radius. When
+  off (default) the absolute nearest aircraft is used regardless of distance.
 
 With a toggle on, when no aircraft is within the radius the affected entities become
 **unavailable** instead of reporting `0` or `unknown`, so no state is emitted until an aircraft is

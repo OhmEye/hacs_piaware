@@ -34,6 +34,7 @@ from .const import (
     CONF_PHONETIC_SPEECH,
     CONF_PORT,
     CONF_SCAN_INTERVAL,
+    CONF_VOICE_RADIUS_MILES,
     DEFAULT_CALLSIGN_STYLE,
     DEFAULT_COUNT_USE_RADIUS,
     DEFAULT_ENRICH_NOTIFICATIONS,
@@ -46,6 +47,7 @@ from .const import (
     DEFAULT_PHONETIC_SPEECH,
     DEFAULT_PORT,
     DEFAULT_SCAN_INTERVAL,
+    DEFAULT_VOICE_RADIUS_MILES,
     DOMAIN,
     MAX_SCAN_INTERVAL,
     MIN_SCAN_INTERVAL,
@@ -83,6 +85,20 @@ def _schema(defaults: dict[str, Any]) -> vol.Schema:
                 CONF_NOTIFICATION_RADIUS_MILES,
                 default=defaults.get(
                     CONF_NOTIFICATION_RADIUS_MILES, DEFAULT_NOTIFICATION_RADIUS_MILES
+                ),
+            ): selector.NumberSelector(
+                selector.NumberSelectorConfig(
+                    min=0.1,
+                    max=100,
+                    step=0.1,
+                    unit_of_measurement="mi",
+                    mode=selector.NumberSelectorMode.BOX,
+                )
+            ),
+            vol.Required(
+                CONF_VOICE_RADIUS_MILES,
+                default=defaults.get(
+                    CONF_VOICE_RADIUS_MILES, DEFAULT_VOICE_RADIUS_MILES
                 ),
             ): selector.NumberSelector(
                 selector.NumberSelectorConfig(

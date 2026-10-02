@@ -128,7 +128,7 @@ class PiAwareSensor(CoordinatorEntity[PiAwareCoordinator], SensorEntity):
         data = self.coordinator.data
         key = self.entity_description.key
         if key == "aircraft_count" and self.coordinator.count_use_radius:
-            return data.in_range_count > 0
+            return data.voice_in_range_count > 0
         if key in _NEAREST_KEYS and self.coordinator.nearest_use_radius:
             return data.nearest is not None
         return True

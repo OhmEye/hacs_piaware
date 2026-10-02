@@ -51,9 +51,11 @@ class PiAwareData:
 
     aircraft: list[Aircraft] = field(default_factory=list)
     nearest: Aircraft | None = None
+    # Nearest aircraft within the notification radius (overhead notifications).
     in_range: Aircraft | None = None
     count: int = 0
-    in_range_count: int = 0
+    # Number of aircraft within the voice command radius.
+    voice_in_range_count: int = 0
 
     @property
     def overhead(self) -> bool:
@@ -73,6 +75,7 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
         scan_interval: int,
         notifications_enabled: bool,
         notification_radius_miles: float,
+        voice_radius_miles: float = 5.0,
         enrich_notifications: bool = False,
         count_use_radius: bool = False,
         nearest_use_radius: bool = False,
@@ -102,6 +105,7 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
         self._url = build_url(host, port, path)
         self.notifications_enabled = notifications_enabled
         self.notification_radius_miles = notification_radius_miles
+        self.voice_radius_miles = voice_radius_miles
         self.enrich_notifications = enrich_notifications
         self.count_use_radius = count_use_radius
         self.nearest_use_radius = nearest_use_radius
@@ -111,7 +115,7 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
         self._tar1090_db = tar1090_db
         self._was_overhead = False
         self._callsign_cache = CallsignCache(CALLSIGN_CACHE_TTL)
-        # Most recent aircraft seen within the notification radius and when.
+        # Most recent aircraft seen within the voice command radius and when.
         self.last_in_range: tuple[Aircraft, datetime] | None = None
 
     @property
@@ -132,28 +136,30 @@ class PiAwareCoordinator(DataUpdateCoordinator[PiAwareData]):
             payload, self.hass.config.latitude, self.hass.config.longitude
         )
         self._callsign_cache.apply(aircraft, dt_util.utcnow())
-        in_range = nearest_aircraft(aircraft, within_miles=self.notification_radius_miles)
-        if in_range is not None:
-            self.last_in_range = (in_range, dt_util.utcnow())
+        overhead_target = nearest_aircraft(
+            aircraft, within_miles=self.notification_radius_miles
+        )
+        voice_target = nearest_aircraft(aircraft, within_miles=self.voice_radius_miles)
+        if voice_target is not None:
+            self.last_in_range = (voice_target, dt_util.utcnow())
+
         positioned_count = sum(1 for a in aircraft if a.has_position)
-        in_range_count = sum(
+        voice_in_range_count = sum(
             1
             for a in aircraft
             if a.distance_miles is not None
-            and a.distance_miles <= self.notification_radius_miles
+            and a.distance_miles <= self.voice_radius_miles
         )
 
-        nearest = (
-            in_range if self.nearest_use_radius else nearest_aircraft(aircraft)
-        )
-        count = in_range_count if self.count_use_radius else positioned_count
+        nearest = voice_target if self.nearest_use_radius else nearest_aircraft(aircraft)
+        count = voice_in_range_count if self.count_use_radius else positioned_count
 
         data = PiAwareData(
             aircraft=aircraft,
             nearest=nearest,
-            in_range=in_range,
+            in_range=overhead_target,
             count=count,
-            in_range_count=in_range_count,
+            voice_in_range_count=voice_in_range_count,
         )
 
         await self._handle_overhead(data)

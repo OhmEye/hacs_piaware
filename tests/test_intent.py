@@ -251,7 +251,7 @@ async def test_intent_reports_recent_when_nothing_in_radius(hass) -> None:
     coordinator = SimpleNamespace(
         data=PiAwareData(nearest=None),
         nearest_use_radius=True,
-        notification_radius_miles=5.0,
+        voice_radius_miles=5.0,
         phonetic_speech=False,
         callsign_style="airline",
         last_in_range=(_aircraft(), when),
@@ -273,7 +273,7 @@ async def test_intent_ignores_recent_cache_without_radius(hass) -> None:
     coordinator = SimpleNamespace(
         data=PiAwareData(nearest=None),
         nearest_use_radius=False,
-        notification_radius_miles=5.0,
+        voice_radius_miles=5.0,
         last_in_range=(_aircraft(), when),
     )
     hass.data[DOMAIN] = {"coordinator": coordinator, "enrichment": None}

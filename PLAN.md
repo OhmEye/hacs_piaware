@@ -23,7 +23,8 @@ HACS-installable custom integration with tests.
 | Reference location | HA `hass.config.latitude/longitude` (Settings → Home Information) |
 | Overhead notifications | Config option, configurable radius, **disabled by default** |
 | Notification API enrichment | Separate option `enrich_notifications`, **disabled by default** |
-| Radius toggles | `count_use_radius` and `nearest_use_radius`, both **default off**, reuse the notification radius |
+| Radii | Two independent radii: `notification_radius_miles` (overhead) and `voice_radius_miles` (voice toggles) |
+| Radius toggles | `count_use_radius` and `nearest_use_radius`, both **default off**, use the voice command radius |
 | Packaging | Custom integration + HACS custom repository |
 | Extras | Dashboard sensors, tests, CI, config flow, blueprint |
 
